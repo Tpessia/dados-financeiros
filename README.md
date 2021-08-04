@@ -1,7 +1,7 @@
 # Fontes de Dados Financeiros
 
 ### METADADOS
-ipeadata: http://ipeadata.gov.br/api/
+ipeadata: http://ipeadata.gov.br/
 \
 ipeadata API: http://ipeadata.gov.br/api/
 \
