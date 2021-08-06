@@ -18,6 +18,8 @@ Bacen SGS: https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?met
 Bacen SGS Tutorial: https://dadosabertos.bcb.gov.br/dataset/25436-taxa-media-mensal-de-juros-das-operacoes-de-credito-com-recursos-livres---total/resource/da27b06a-201d-433b-8351-d9987e3d6487
 \
 Developers B3: https://developers.b3.com.br/
+\
+ANBIMA Data: https://data.anbima.com.br/
 
 ### ÍNDICES
 IPCA Anualizado (JSON) [IPEA]: http://ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO='PAN12_IPCAG12')
@@ -58,21 +60,6 @@ IGM-M Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dad
 \
 TR Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados?formato=json
 
-### TESOURO DIRETO
-Histórico de Preços (CSV) [Tesouro Nacional]: https://sisweb.tesouro.gov.br/apex/f?p=2031:2:
-\
-Histórico de Preços (CSV) [Tesouro Transparente]: https://www.tesourotransparente.gov.br/ckan/dataset/taxas-dos-titulos-ofertados-pelo-tesouro-direto
-\
-Histórico de Preços (CSV) [Tesouro Direto]: https://www.tesourodireto.com.br/titulos/historico-de-precos-e-taxas.htm
-\
-Preços D0 (HTML) [Tesouro Direto]: https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm
-\
-Preços D0 (JSON) [Tesouro Direto]: https://www.tesourodireto.com.br/json/br/com/b3/tesourodireto/service/api/treasurybondsinfo.json
-\
-Rentabilidade Antecipada (HTML) [Tesouro Nacional]: https://sisweb.tesouro.gov.br/apex/f?p=2031:1:
-\
-IMA - Índice de Mercado ANBIMA (HTML) [ANBIMA]: https://www.anbima.com.br/informacoes/ima/ima-carteira-teorica.asp
-
 ### AÇÕES/FIIs
 Yahoo Finance:
 \
@@ -89,3 +76,25 @@ Alpha Vantage:
 \- Info: https://rapidapi.com/alphavantage/api/alpha-vantage
 \
 \- https://www.alphavantage.co/query?apikey={API_KEY}&function=TIME_SERIES_DAILY_ADJUSTED&symbol=BOVA11.SA&datatype=json&outputsize=full
+
+### TESOURO DIRETO
+Histórico de Preços (CSV) [Tesouro Nacional]: https://sisweb.tesouro.gov.br/apex/f?p=2031:2:
+\
+Histórico de Preços (CSV) [Tesouro Transparente]: https://www.tesourotransparente.gov.br/ckan/dataset/taxas-dos-titulos-ofertados-pelo-tesouro-direto
+\
+Histórico de Preços (CSV) [Tesouro Direto]: https://www.tesourodireto.com.br/titulos/historico-de-precos-e-taxas.htm
+\
+Preços D0 (HTML) [Tesouro Direto]: https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm
+\
+Preços D0 (JSON) [Tesouro Direto]: https://www.tesourodireto.com.br/json/br/com/b3/tesourodireto/service/api/treasurybondsinfo.json
+\
+Rentabilidade Antecipada (HTML) [Tesouro Nacional]: https://sisweb.tesouro.gov.br/apex/f?p=2031:1:
+\
+IMA - Índice de Mercado ANBIMA (HTML) [ANBIMA]: https://www.anbima.com.br/informacoes/ima/ima-carteira-teorica.asp
+
+### TÍTULOS PRIVADOS
+CRI/CRA (HTML) [ANBIMA Data]: https://data.anbima.com.br/certificado-de-recebiveis
+Debêntures (HTML) [ANBIMA Data]: https://data.anbima.com.br/debentures
+
+### FUNDOS DE INVESTIMENTO
+Dados de Fundos (HTML) [ANBIMA Data]: https://data.anbima.com.br/fundos
