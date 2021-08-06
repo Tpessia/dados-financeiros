@@ -20,6 +20,12 @@ Bacen SGS Tutorial: https://dadosabertos.bcb.gov.br/dataset/25436-taxa-media-men
 Developers B3: https://developers.b3.com.br/
 \
 ANBIMA Data: https://data.anbima.com.br/
+\
+Fazenda SP: https://portal.fazenda.sp.gov.br/acessoinformacao/Paginas/Consultas.aspx
+\
+Fazenda SP API: https://webservices.fazenda.sp.gov.br/WSTransparencia/TransparenciaServico.asmx
+\
+Portal do Investidor: https://www.investidor.gov.br/menu/Investidor_Estrangeiro/DadosEstatisticosEconomicosBrasil.html
 
 ### ÍNDICES
 IPCA Anualizado (JSON) [IPEA]: http://ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO='PAN12_IPCAG12')
@@ -77,6 +83,13 @@ Alpha Vantage:
 \
 \- https://www.alphavantage.co/query?apikey={API_KEY}&function=TIME_SERIES_DAILY_ADJUSTED&symbol=BOVA11.SA&datatype=json&outputsize=full
 
+### AÇÕES - FUNDAMENTALISTA
+Fundamentus: https://fundamentus.com.br/
+\
+Oceans14: https://www.oceans14.com.br/
+\
+Fundamentei: https://fundamentei.com/
+
 ### TESOURO DIRETO
 Histórico de Preços (CSV) [Tesouro Nacional]: https://sisweb.tesouro.gov.br/apex/f?p=2031:2:
 \
@@ -99,3 +112,27 @@ Debêntures (HTML) [ANBIMA Data]: https://data.anbima.com.br/debentures
 
 ### FUNDOS DE INVESTIMENTO
 Dados de Fundos (HTML) [ANBIMA Data]: https://data.anbima.com.br/fundos
+
+### PACOTES
+
+#### PYTHON
+InvestPy: https://github.com/alvarobartt/investpy
+yfinance: https://github.com/ranaroussi/yfinance
+DadosAbertosBrasil: https://github.com/GusFurtado/DadosAbertosBrasil
+
+### TODO
+https://escoladofinanceiro.com/investimentos-no-brasil/
+\
+https://iextrading.com/
+\
+https://www.algoseek.com/data-drive.html
+\
+https://www.fea.usp.br/biblioteca/fontes-de-informacao/base-de-dados
+\
+https://rpubs.com/frank-pinho/517779
+\
+https://fxgears.com/index.php?threads/how-to-acquire-free-historical-tick-and-bar-data-for-algo-trading-and-backtesting-in-2020-stocks-forex-and-crypto-currency.1229/#post-19305
+\
+https://github.com/GusFurtado/DadosAbertosBrasil / https://www.gustavofurtado.com/dab.html
+\
+https://dadosabertos.bcb.gov.br/dataset/dolar-americano-usd-todos-os-boletins-diarios
