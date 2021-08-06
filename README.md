@@ -94,6 +94,7 @@ IMA - Índice de Mercado ANBIMA (HTML) [ANBIMA]: https://www.anbima.com.br/infor
 
 ### TÍTULOS PRIVADOS
 CRI/CRA (HTML) [ANBIMA Data]: https://data.anbima.com.br/certificado-de-recebiveis
+\
 Debêntures (HTML) [ANBIMA Data]: https://data.anbima.com.br/debentures
 
 ### FUNDOS DE INVESTIMENTO
