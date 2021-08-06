@@ -122,6 +122,9 @@ yfinance: https://github.com/ranaroussi/yfinance
 \
 DadosAbertosBrasil: https://github.com/GusFurtado/DadosAbertosBrasil
 
+##### NODE.JS
+CEI Crawler: https://github.com/Menighin/cei-crawler
+
 ### TODO
 https://escoladofinanceiro.com/investimentos-no-brasil/
 \
