@@ -97,6 +97,8 @@ Histórico de Preços (CSV) [Tesouro Transparente]: https://www.tesourotranspare
 \
 Histórico de Preços (CSV) [Tesouro Direto]: https://www.tesourodireto.com.br/titulos/historico-de-precos-e-taxas.htm
 \
+Histórico de Preços (CSV) [Dados Abertos Gov]: https://dados.gov.br/dataset/taxas-dos-titulos-ofertados-pelo-tesouro-direto1
+\
 Preços D0 (HTML) [Tesouro Direto]: https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm
 \
 Preços D0 (JSON) [Tesouro Direto]: https://www.tesourodireto.com.br/json/br/com/b3/tesourodireto/service/api/treasurybondsinfo.json
