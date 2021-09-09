@@ -1,6 +1,8 @@
 # Fontes de Dados Financeiros
 
+
 ### METADADOS
+
 ipeadata: http://ipeadata.gov.br/
 \
 ipeadata API: http://ipeadata.gov.br/api/
@@ -27,7 +29,9 @@ Fazenda SP API: https://webservices.fazenda.sp.gov.br/WSTransparencia/Transparen
 \
 Portal do Investidor: https://www.investidor.gov.br/menu/Investidor_Estrangeiro/DadosEstatisticosEconomicosBrasil.html
 
+
 ### ÍNDICES
+
 IPCA Anualizado (JSON) [IPEA]: http://ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO='PAN12_IPCAG12')
 \
 IPCA Anualizado (GRÁFICO) [IPEA]: http://www.ipeadata.gov.br/ExibeSerie.aspx?serid=38391
@@ -66,7 +70,9 @@ IGM-M Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dad
 \
 TR Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados?formato=json
 
+
 ### AÇÕES/FIIs
+
 Yahoo Finance:
 \
 \- Info: https://rapidapi.com/apidojo/api/yahoo-finance1
@@ -83,14 +89,18 @@ Alpha Vantage:
 \
 \- https://www.alphavantage.co/query?apikey={API_KEY}&function=TIME_SERIES_DAILY_ADJUSTED&symbol=BOVA11.SA&datatype=json&outputsize=full
 
+
 ### AÇÕES - FUNDAMENTALISTA
+
 Fundamentus: https://fundamentus.com.br/
 \
 Oceans14: https://www.oceans14.com.br/
 \
 Fundamentei: https://fundamentei.com/
 
+
 ### TESOURO DIRETO
+
 Histórico de Preços (CSV) [Tesouro Nacional]: https://sisweb.tesouro.gov.br/apex/f?p=2031:2:
 \
 Histórico de Preços (CSV) [Tesouro Transparente]: https://www.tesourotransparente.gov.br/ckan/dataset/taxas-dos-titulos-ofertados-pelo-tesouro-direto
@@ -107,13 +117,18 @@ Rentabilidade Antecipada (HTML) [Tesouro Nacional]: https://sisweb.tesouro.gov.b
 \
 IMA - Índice de Mercado ANBIMA (HTML) [ANBIMA]: https://www.anbima.com.br/informacoes/ima/ima-carteira-teorica.asp
 
+
 ### TÍTULOS PRIVADOS
+
 CRI/CRA (HTML) [ANBIMA Data]: https://data.anbima.com.br/certificado-de-recebiveis
 \
 Debêntures (HTML) [ANBIMA Data]: https://data.anbima.com.br/debentures
 
+
 ### FUNDOS DE INVESTIMENTO
+
 Dados de Fundos (HTML) [ANBIMA Data]: https://data.anbima.com.br/fundos
+
 
 ### PACOTES
 
@@ -126,6 +141,16 @@ DadosAbertosBrasil: https://github.com/GusFurtado/DadosAbertosBrasil
 
 ##### NODE.JS
 CEI Crawler: https://github.com/Menighin/cei-crawler
+
+
+### Sites
+
+Considere a Inflação: https://www.considereainflacao.com.br/ (https://github.com/danielbm/considere)
+\
+Dados Abertos Brasil: https://www.gustavofurtado.com/dab.html (https://github.com/GusFurtado/DadosAbertosBrasil)
+\
+DrCalc.net: http://drcalc.net/
+
 
 ### TODO
 https://escoladofinanceiro.com/investimentos-no-brasil/
@@ -140,8 +165,4 @@ https://rpubs.com/frank-pinho/517779
 \
 https://fxgears.com/index.php?threads/how-to-acquire-free-historical-tick-and-bar-data-for-algo-trading-and-backtesting-in-2020-stocks-forex-and-crypto-currency.1229/#post-19305
 \
-https://github.com/GusFurtado/DadosAbertosBrasil / https://www.gustavofurtado.com/dab.html
-\
 https://dadosabertos.bcb.gov.br/dataset/dolar-americano-usd-todos-os-boletins-diarios
-\
-http://drcalc.net/
