@@ -73,8 +73,7 @@ TR Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados?
 
 ### AÇÕES/FIIs
 
-Yahoo Finance:
-\
+#### Yahoo Finance
 \- Info: https://rapidapi.com/apidojo/api/yahoo-finance1
 \
 \- https://query1.finance.yahoo.com/v8/finance/chart/BOVA11.SA?interval=1h&period1=1577847600&period2=1609469999&events=div,splits&includePrePost=true
@@ -82,12 +81,16 @@ Yahoo Finance:
 \- interval = 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
 \
 \- period1/period2 = min/max Unix Time
-\
-Alpha Vantage:
-\
+
+#### Alpha Vantage
 \- Info: https://rapidapi.com/alphavantage/api/alpha-vantage
 \
 \- https://www.alphavantage.co/query?apikey={API_KEY}&function=TIME_SERIES_DAILY_ADJUSTED&symbol=BOVA11.SA&datatype=json&outputsize=full
+
+#### brapi
+\- Info: https://brapi.ga/docs
+\
+\- https://brapi.ga
 
 
 ### AÇÕES - FUNDAMENTALISTA
