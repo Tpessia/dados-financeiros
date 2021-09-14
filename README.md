@@ -28,6 +28,8 @@ Fazenda SP: https://portal.fazenda.sp.gov.br/acessoinformacao/Paginas/Consultas.
 Fazenda SP API: https://webservices.fazenda.sp.gov.br/WSTransparencia/TransparenciaServico.asmx
 \
 Portal do Investidor: https://www.investidor.gov.br/menu/Investidor_Estrangeiro/DadosEstatisticosEconomicosBrasil.html
+\
+Instituições Financeiras: https://www3.bcb.gov.br/ifdata/
 
 
 ### ÍNDICES
