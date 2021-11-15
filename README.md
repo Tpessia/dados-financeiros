@@ -171,3 +171,5 @@ https://rpubs.com/frank-pinho/517779
 https://fxgears.com/index.php?threads/how-to-acquire-free-historical-tick-and-bar-data-for-algo-trading-and-backtesting-in-2020-stocks-forex-and-crypto-currency.1229/#post-19305
 \
 https://dadosabertos.bcb.gov.br/dataset/dolar-americano-usd-todos-os-boletins-diarios
+\
+https://www.dadosdemercado.com.br/api/docs
