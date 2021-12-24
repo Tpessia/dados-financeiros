@@ -44,6 +44,8 @@ IPCA Expectativa 12 Meses (JSON) [IPEA]: http://ipeadata.gov.br/api/odata4/Valor
 \
 Selic Mês (JSON) [IPEA]: http://ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO='PAN12_TJOVER12')
 \
+Selic Acumulada no Mês (JSON) [IPEA]: http://ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO='BM12_TJOVER12')
+\
 Selic Mês (GRÁFICO) [IPEA]: http://www.ipeadata.gov.br/exibeserie.aspx?serid=38402
 \
 CDI Mês (JSON) [IPEA]: http://ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO='BM12_TJCDI12')
