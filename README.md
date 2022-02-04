@@ -73,6 +73,10 @@ Selic Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/da
 IGM-M Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dados?formato=json
 \
 TR Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados?formato=json
+\
+Índices Amplos (HTML) [B3]: https://www.b3.com.br/pt_br/market-data-e-indices/indices/
+\
+Índices de Segmentos e Setoriais (HTML) [B3]: https://www.b3.com.br/pt_br/market-data-e-indices/indices/indices-de-segmentos-e-setoriais/
 
 
 ### AÇÕES/FIIs
