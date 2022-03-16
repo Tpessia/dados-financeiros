@@ -179,3 +179,5 @@ https://fxgears.com/index.php?threads/how-to-acquire-free-historical-tick-and-ba
 https://dadosabertos.bcb.gov.br/dataset/dolar-americano-usd-todos-os-boletins-diarios
 \
 https://www.dadosdemercado.com.br/api/docs
+\
+https://nefin.com.br/
