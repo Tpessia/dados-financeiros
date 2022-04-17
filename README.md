@@ -181,3 +181,5 @@ https://dadosabertos.bcb.gov.br/dataset/dolar-americano-usd-todos-os-boletins-di
 https://www.dadosdemercado.com.br/api/docs
 \
 https://nefin.com.br/
+\
+https://www.comdinheiro.com.br/
