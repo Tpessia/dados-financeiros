@@ -140,6 +140,14 @@ Debêntures (HTML) [ANBIMA Data]: https://data.anbima.com.br/debentures
 
 Dados de Fundos (HTML) [ANBIMA Data]: https://data.anbima.com.br/fundos
 
+### SERVIÇOS PROFISSIONAIS
+
+Comdinheiro: https://comdinheiro.com.br
+\
+APIs Fintz: https://fintz.com.br
+\
+Algoseek: https://www.algoseek.com
+
 
 ### PACOTES
 
@@ -185,8 +193,6 @@ https://escoladofinanceiro.com/investimentos-no-brasil/
 \
 https://iextrading.com/
 \
-https://www.algoseek.com/data-drive.html
-\
 https://www.fea.usp.br/biblioteca/fontes-de-informacao/base-de-dados
 \
 https://rpubs.com/frank-pinho/517779
@@ -198,5 +204,3 @@ https://dadosabertos.bcb.gov.br/dataset/dolar-americano-usd-todos-os-boletins-di
 https://www.dadosdemercado.com.br/api/docs
 \
 https://nefin.com.br/
-\
-https://www.comdinheiro.com.br/
