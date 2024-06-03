@@ -76,7 +76,7 @@ Selic Diário (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/d
 \
 Selic Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=json
 \
-IGM-M Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dados?formato=json
+IGP-M Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dados?formato=json
 \
 TR Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados?formato=json
 \
