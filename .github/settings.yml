@@ -1,0 +1,33 @@
+# https://github.com/apps/settings
+
+repository:
+  default_branch: main
+  name: dados-financeiros
+  description: Repositório de Fontes de Dados Financeiros
+  topics: finance, stock-market, market-data, brasil, financial-data
+  # homepage: https://example.com # TODO: add website
+  private: false
+  has_issues: true
+  has_wiki: false
+  has_projects: false
+  has_downloads: true
+  delete_branch_on_merge: true
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: false
+
+branches:
+  - name: main
+    protection:
+      enforce_admins: false
+      allow_force_pushes: true
+      required_linear_history: true
+      restrictions: null
+      allow_deletions: false
+      required_pull_request_reviews:
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: true
+        required_approving_review_count: 1
+      required_status_checks:
+        strict: true
+        contexts: [ 'test' ]
