@@ -36,41 +36,41 @@ export class SearchService {
         {
             name: 'SELIC%',
             assetType: AssetType.Selic,
-            checkType: (assetCode) => assetCode.startsWith('SELIC%'),
+            checkType: (assetCode) => assetCode.startsWith('SELIC%.SA'),
             service: SelicDaySgsService,
         },
         {
             name: AssetType.Selic,
             assetType: AssetType.Selic,
-            checkType: (assetCode) => assetCode.startsWith('SELIC'),
+            checkType: (assetCode) => assetCode.startsWith('SELIC.SA'),
             service: SelicDaySgsService,
             transform: (data, rate) => applyLeverage(assetfy(data, initValue), rate),
         },
         {
             name: 'IPCA%',
             assetType: AssetType.IPCA,
-            checkType: (assetCode) => assetCode.startsWith('IPCA%'),
+            checkType: (assetCode) => assetCode.startsWith('IPCA%.SA'),
             service: IpcaDaySgsService,
             transform: (data, rate) => data.map(e => ({ ...e, value: e.value * rate })),
         },
         {
             name: AssetType.IPCA,
             assetType: AssetType.IPCA,
-            checkType: (assetCode) => assetCode.startsWith('IPCA'),
+            checkType: (assetCode) => assetCode.startsWith('IPCA.SA'),
             service: IpcaDaySgsService,
             transform: (data, rate) => applyLeverage(assetfy(data, initValue), rate),
         },
         {
             name: AssetType.IMAB,
             assetType: AssetType.IMAB,
-            checkType: (assetCode) => assetCode.startsWith('IMAB'),
+            checkType: (assetCode) => assetCode.startsWith('IMAB.SA'),
             service: ImabDaySgsService,
             transform: (data, rate) => applyLeverage(data, rate),
         },
         {
             name: AssetType.GovBond,
             assetType: AssetType.GovBond,
-            checkType: (assetCode) => Object.values(GovBondType).reduce((acc, val) => acc || assetCode.startsWith(val), false),
+            checkType: (assetCode) => Object.values(GovBondType).reduce((acc, val) => acc || assetCode.startsWith(`${val}.SA`), false),
             service: GovBondDayTransparenteService,
             transform: (data, rate) => applyLeverage(data, rate),
         },
@@ -108,10 +108,12 @@ export class SearchService {
             const serviceAsync: Promise<BaseAssetService> = this.moduleRef.resolve(rule.service, undefined, { strict: false });
             return assetsByType[rule.name].map((asset) => async () => {
                 let [code, rate] = asset.assetCode.split('*');
+                const hasRate = rate != null;
                 if (isNaN(+rate)) rate = '1';
                 let data = await (await serviceAsync).getData({ assetCode: code, minDate, maxDate, rate: +rate });
                 if (rule.transform) data.data = rule.transform(data.data, +rate);
                 data.data = cleanUpData(data.data);
+                if (hasRate) data.key = `${data.key}*${rate}`;
                 return data;
             });
         });

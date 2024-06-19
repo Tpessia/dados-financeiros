@@ -18,7 +18,7 @@ Busca dados financeiros com base nos códigos dos ativos, data mínima e data m�
 
 **Parâmetros de Query:**
 
-- `assetCodes` (string, obrigatório): Códigos dos ativos, por exemplo: `IPCA`, `SELIC*0.9`, `BOVA11.SA:USDBRL`.
+- `assetCodes` (string, obrigatório): Códigos dos ativos, por exemplo: `TSLA`, `BOVA11.SA:USDBRL`, `IPCA.SA`, `FIXED*0.1`, `SELIC.SA*0.9`.
 - `minDate` (string, obrigatório): Data mínima no formato `YYYY-MM-DD`, por exemplo: `2020-01-01`.
 - `maxDate` (string, obrigatório): Data máxima no formato `YYYY-MM-DD`, por exemplo: `2020-01-31`.
 

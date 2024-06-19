@@ -28,7 +28,7 @@ describe('SearchService', () => {
       const data = await service.getAssets(`FIXED*${rate}`, startDate, addDays(startDate, dateLength));
 
       const assetData = data[0].data;
-      const value = round(1000 * Math.pow(1 + rate, dateLength / businessDaysInYear(startDate.getFullYear())), 2);
+      const value = round(1000 * Math.pow(1 + rate, (dateLength-1) / (businessDaysInYear(startDate.getFullYear())-1)), 2);
 
       expect(assetData.length).toBe(5);
       expect(assetData[assetData.length - 1].value).toBe(value);

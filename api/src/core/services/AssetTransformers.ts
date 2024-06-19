@@ -1,4 +1,4 @@
-import { businessDaysInYear, dateToIsoStr, datesRange, getFirstOfMonth, getLastOfMonth, isWeekend } from '@/@utils';
+import { businessDaysInYear, businessDaysRange, dateToIsoStr, datesRange, getFirstOfMonth, getLastOfMonth, isWeekend } from '@/@utils';
 import { AssetData } from '@/core/models/AssetData';
 import { round } from 'lodash';
 
@@ -32,17 +32,16 @@ export function dailyfyPercents(monthlyData: AssetData[], maxDate?: Date): Asset
 
 export function assetfy(data: AssetData[], initValue: number): AssetData[] {
   const assetData: AssetData[] = [];
-  let prevValue = initValue;
+  let assetValue = initValue;
 
   for (const { assetCode, date, value } of data) {
-    const dailyValue = prevValue * (1 + value);
-    prevValue = dailyValue;
-
     assetData.push({
       assetCode,
       date,
-      value: dailyValue,
+      value: assetValue,
     });
+
+    assetValue = assetValue * (1 + value);
   }
 
   return assetData;
@@ -69,7 +68,7 @@ export function convertCurrency<T extends AssetData>(data: T[], currency: AssetD
 }
 
 export function generateFixedRate(assetCode: string, start: Date, end: Date, initValue: number, annualIrr: number): AssetData[] {
-  const dates = datesRange(start, end).filter(e => !isWeekend(e));
+  const dates = businessDaysRange(start, end);
   const data: AssetData[] = [];
 
   // Get the start and end years from the date range
@@ -87,8 +86,8 @@ export function generateFixedRate(assetCode: string, start: Date, end: Date, ini
   for (let i = 0; i < dates.length; i++) {
     const date = dates[i];
     const year = date.getFullYear();
-    const periodNumber = i + 1;
-    const periodsPerYear = tradingDaysByYear.get(year) || 252; // Default to 252 if not found
+    const periodNumber = i; // + 1;
+    const periodsPerYear = tradingDaysByYear.get(year)-1 || 252;
     const rate = Math.pow(1 + annualIrr, periodNumber / periodsPerYear);
     data.push({ assetCode, date, value: initValue * rate });
   }

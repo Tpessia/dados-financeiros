@@ -17,6 +17,7 @@ export class StockYahooForeignService extends BaseAssetService {
         const currencyData = this.stockYahooService.getData({ assetCode: `${currency}=X`, minDate, maxDate }).then(e => e.data);
         const assetData = await this.stockYahooService.getData({ assetCode: asset, minDate, maxDate });
         const data = convertCurrency(assetData.data, await currencyData);
+        data.forEach(e => e.assetCode = assetCode);
         return {
             ...assetData,
             data: data,

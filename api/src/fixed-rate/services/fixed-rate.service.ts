@@ -27,7 +27,7 @@ export class FixedRateService extends BaseAssetService {
             },
             data: [],
         };
-        
+
         assetData.data = generateFixedRate(AssetType.FixedRate, minDate, maxDate, initValue, rate);
 
         return assetData;
