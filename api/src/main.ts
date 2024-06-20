@@ -2,7 +2,7 @@ import { globalMemoizeConfig } from '@/@utils';
 import ErrorFilter from '@/core/middlewares/ErrorFilter';
 import { FileLogger } from '@/core/middlewares/FileLogger';
 import { AppService } from '@/core/services/app.service';
-import { BadRequestException, LogLevel, ValidationPipe } from '@nestjs/common';
+import { BadRequestException, LogLevel, VERSION_NEUTRAL, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerCustomOptions, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -22,8 +22,13 @@ async function bootstrap() {
     logger: new FileLogger(logLevels),
   });
 
-  app.setGlobalPrefix('api');
   app.enableCors();
+
+  app.setGlobalPrefix('api');
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: VERSION_NEUTRAL,
+  });
 
   app.useGlobalFilters(new ErrorFilter());
 
