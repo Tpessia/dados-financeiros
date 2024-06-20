@@ -2,7 +2,7 @@ import { promiseParallel } from '@/@utils';
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
-import { applyLeverage, assetfy, cleanUpData, initValue } from '@/core/services/AssetTransformers';
+import { applyLeverage, assetfy, cleanUpData, convertCurrency, initValue } from '@/core/services/AssetTransformers';
 import { BaseAssetService } from '@/core/services/BaseAssetService';
 import { FixedRateService } from '@/fixed-rate/services/fixed-rate.service';
 import { GovBondType } from '@/gov-bond/models/GovBondData';
@@ -10,7 +10,6 @@ import { GovBondDayTransparenteService } from '@/gov-bond/services/gov-bond-day-
 import { ImabDaySgsService } from '@/ipca/services/imab-day-sgs.service';
 import { IpcaDaySgsService } from '@/ipca/services/ipca-day-sgs.service';
 import { SelicDaySgsService } from '@/selic/services/selic-day-sgs.service';
-import { StockYahooForeignService } from '@/stock/services/stock-yahoo-foreign.service';
 import { StockYahooService } from '@/stock/services/stock-yahoo.service';
 import { Injectable, Scope, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -34,24 +33,11 @@ export class SearchService {
             service: FixedRateService,
         },
         {
-            name: 'SELIC%',
-            assetType: AssetType.Selic,
-            checkType: (assetCode) => assetCode.startsWith('SELIC%.SA'),
-            service: SelicDaySgsService,
-        },
-        {
             name: AssetType.Selic,
             assetType: AssetType.Selic,
             checkType: (assetCode) => assetCode.startsWith('SELIC.SA'),
             service: SelicDaySgsService,
             transform: (data, rate) => applyLeverage(assetfy(data, initValue), rate),
-        },
-        {
-            name: 'IPCA%',
-            assetType: AssetType.IPCA,
-            checkType: (assetCode) => assetCode.startsWith('IPCA%.SA'),
-            service: IpcaDaySgsService,
-            transform: (data, rate) => data.map(e => ({ ...e, value: e.value * rate })),
         },
         {
             name: AssetType.IPCA,
@@ -82,13 +68,6 @@ export class SearchService {
             transform: (data, rate) => applyLeverage(data, rate),
         },
         {
-            name: 'ForeignStock',
-            assetType: AssetType.Stock,
-            checkType: (assetCode) => assetCode.includes(':'),
-            service: StockYahooForeignService,
-            transform: (data, rate) => applyLeverage(data, rate),
-        },
-        {
             name: AssetType.Stock,
             assetType: AssetType.Stock,
             checkType: (assetCode) => true,
@@ -105,16 +84,38 @@ export class SearchService {
 
         const tasks: (() => Promise<AssetHistData<AssetData>>)[] = Object.values(assetsByType).flatMap((assetRule) => {
             const rule = assetRule[0].rule;
-            const serviceAsync: Promise<BaseAssetService> = this.moduleRef.resolve(rule.service, undefined, { strict: false });
+
             return assetsByType[rule.name].map((asset) => async () => {
-                let [code, rate] = asset.assetCode.split('*');
-                const hasRate = rate != null;
-                if (isNaN(+rate)) rate = '1';
-                let data = await (await serviceAsync).getData({ assetCode: code, minDate, maxDate, rate: +rate });
+                const service: BaseAssetService = await this.moduleRef.resolve(rule.service, undefined, { strict: false });
+
+                let [_, code, currency, rate] = asset.assetCode.match(/^([^\:\*]+)(?:\:(\w+))?(?:\*([\w\.]+))?/); // TSLA:USDBRL*1.5, USDBRL=X
+
+                if (code == null || (rate != null && isNaN(+rate)))
+                    throw new Error(`Invalid asset code: ${asset.assetCode}`);
+
+                if (rate == null) rate = '1';
+
+                const currencyData = getCurrencyData.call(this, currency);
+
+                let data = await service.getData({ assetCode: code, minDate, maxDate, rate: +rate });
                 if (rule.transform) data.data = rule.transform(data.data, +rate);
+
+                if ((await currencyData) != null) {
+                    data.data = convertCurrency(data.data, await currencyData);
+                    data.data.forEach(e => e.assetCode = `${code}:${currency}`);
+                }
+
                 data.data = cleanUpData(data.data);
-                if (hasRate) data.key = `${data.key}*${rate}`;
+                data.key = asset.assetCode;
+
                 return data;
+
+                async function getCurrencyData(currency?: string) {
+                    if (currency == null) return null;
+                    const forexService = await this.moduleRef.resolve(StockYahooService, undefined, { strict: false });
+                    const currencyData = await forexService.getData({ assetCode: `${currency}=X`, minDate, maxDate }).then(e => e.data);
+                    return currencyData;
+                }
             });
         });
 

@@ -10,5 +10,4 @@ export enum DataSource {
   SelicDaySgs = 'SelicDaySgs',
   SelicMonthSgs = 'SelicMonthSgs',
   StockYahoo = 'StockYahoo',
-  StockYahooSummary = 'StockYahooSummary',
 }

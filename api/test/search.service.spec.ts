@@ -33,11 +33,5 @@ describe('SearchService', () => {
       expect(assetData.length).toBe(5);
       expect(assetData[assetData.length - 1].value).toBe(value);
     });
-
-    it('SELIC%', async () => {
-      const data = await service.getAssets(`SELIC%`, new Date(2024, 0, 1), new Date(2024, 0, 1));
-      const assetData = data[0].data;
-      expect(assetData[0].value).toBe(0.01 / 100);
-    });
   });
 });

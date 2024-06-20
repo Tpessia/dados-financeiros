@@ -4,6 +4,8 @@ import { QueryRequiredPipe } from '@/core/middlewares/QueryRequired';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { StocksYahooInterval } from '@/stock/dtos/StocksYahooParams';
 import { StockData } from '@/stock/models/StockData';
+import { StockSearchData } from '@/stock/models/StockSearchData';
+import { StockYahooSearchService } from '@/stock/services/stock-yahoo-search.service';
 import { StockYahooSummaryService } from '@/stock/services/stock-yahoo-summary.service';
 import { StockYahooService } from '@/stock/services/stock-yahoo.service';
 import { Controller, Get, Query } from '@nestjs/common';
@@ -15,6 +17,7 @@ export class StockController {
     constructor(
         private readonly stockYahooService: StockYahooService,
         private readonly stockYahooSummaryService: StockYahooSummaryService,
+        private readonly stockYahooSearchService: StockYahooSearchService,
     ) {}
 
     @ApiOkResponse({ type: AssetHistData<StockData> })
@@ -26,8 +29,15 @@ export class StockController {
     }
 
     @Get('summary')
-    async getData2(@Query('ticker', QueryRequiredPipe) ticker: string) {
-        const data = await this.stockYahooSummaryService.getData({ assetCode: ticker });
+    async getSummary(@Query('ticker', QueryRequiredPipe) ticker: string) {
+        const data = await this.stockYahooSummaryService.getData(ticker);
+        return data;
+    }
+
+    @Get('search')
+    async search(@Query('ticker', QueryRequiredPipe) ticker: string): Promise<StockSearchData[]> {
+        if (ticker == '') return [];
+        const data = await this.stockYahooSearchService.getData(ticker);
         return data;
     }
 }

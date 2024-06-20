@@ -67,7 +67,7 @@ async function bootstrap() {
 
   // Listen
 
-  await app.listen(process.env.PORT, '0.0.0.0', () => {
+  await app.listen(process.env.PORT, 'localhost', () => {
     const address = app.getHttpServer().address();
     const hostname = address.family === 'IPv6' ? `[${address.address}]` : address.address;
     AppService.addInfo(`Listening on http://${hostname}:${address.port}/api/`);

@@ -1,5 +1,3 @@
-import { DataSource } from '@/core/enums/DataSource';
-import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { HttpService } from '@/core/services/http.service';
 import { Injectable, Scope } from '@nestjs/common';
 
@@ -8,14 +6,9 @@ import { Injectable, Scope } from '@nestjs/common';
 // https://query1.finance.yahoo.com/v10/finance/quoteSummary/AAPL?modules=price,summaryDetail&crumb=
 
 @Injectable({ scope: Scope.DEFAULT })
-export class StockYahooSummaryService extends BaseAssetService {
-    constructor() {
-        super(DataSource.StockYahooSummary);
-    }
-
-    async getData({ assetCode }: GetDataParams) {
-        if (assetCode == null) throw new Error('Invalid params: assetCode');
-        const dto = await this.getDto(assetCode);
+export class StockYahooSummaryService {
+    async getData(ticker: string) {
+        const dto = await this.getDto(ticker);
         return dto;
     }
 
