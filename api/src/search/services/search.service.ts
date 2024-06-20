@@ -3,7 +3,7 @@ import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
 import { applyLeverage, assetfy, cleanUpData, convertCurrency, initValue } from '@/core/services/AssetTransformers';
-import { BaseAssetService } from '@/core/services/BaseAssetService';
+import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { FixedRateService } from '@/fixed-rate/services/fixed-rate.service';
 import { GovBondType } from '@/gov-bond/models/GovBondData';
 import { GovBondDayTransparenteService } from '@/gov-bond/services/gov-bond-day-transparente.service';
@@ -20,7 +20,8 @@ interface AssetRule {
     assetType: AssetType;
     checkType: (assetCode: string) => boolean;
     service: Type;
-    transform?: (data: AssetData[], rate: number) => AssetData[];
+    transformInputs?: (inputs: GetDataParams) => GetDataParams;
+    transformData?: (data: AssetData[], rate: number) => AssetData[];
 };
 
 @Injectable({ scope: Scope.DEFAULT })
@@ -37,42 +38,43 @@ export class SearchService {
             assetType: AssetType.Selic,
             checkType: (assetCode) => assetCode.startsWith('SELIC.SA'),
             service: SelicDaySgsService,
-            transform: (data, rate) => applyLeverage(assetfy(data, initValue), rate),
+            transformData: (data, rate) => applyLeverage(assetfy(data, initValue), rate),
         },
         {
             name: AssetType.IPCA,
             assetType: AssetType.IPCA,
             checkType: (assetCode) => assetCode.startsWith('IPCA.SA'),
             service: IpcaDaySgsService,
-            transform: (data, rate) => applyLeverage(assetfy(data, initValue), rate),
+            transformData: (data, rate) => applyLeverage(assetfy(data, initValue), rate),
         },
         {
             name: AssetType.IMAB,
             assetType: AssetType.IMAB,
             checkType: (assetCode) => assetCode.startsWith('IMAB.SA'),
             service: ImabDaySgsService,
-            transform: (data, rate) => applyLeverage(data, rate),
+            transformData: (data, rate) => applyLeverage(data, rate),
         },
         {
             name: AssetType.GovBond,
             assetType: AssetType.GovBond,
-            checkType: (assetCode) => Object.values(GovBondType).reduce((acc, val) => acc || assetCode.startsWith(`${val}.SA`), false),
+            checkType: (assetCode) => new RegExp(`^(${Object.values(GovBondType).join('|')})/\\d{4}\\.SA$`).test(assetCode),
             service: GovBondDayTransparenteService,
-            transform: (data, rate) => applyLeverage(data, rate),
+            transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: assetCode.replace('.SA', ''), ...inputs }),
+            transformData: (data, rate) => applyLeverage(data, rate),
         },
         {
             name: AssetType.Forex,
             assetType: AssetType.Forex,
             checkType: (assetCode) => assetCode.endsWith('=X'),
             service: StockYahooService,
-            transform: (data, rate) => applyLeverage(data, rate),
+            transformData: (data, rate) => applyLeverage(data, rate),
         },
         {
             name: AssetType.Stock,
             assetType: AssetType.Stock,
             checkType: (assetCode) => true,
             service: StockYahooService,
-            transform: (data, rate) => applyLeverage(data, rate),
+            transformData: (data, rate) => applyLeverage(data, rate),
         },
     ];
 
@@ -97,8 +99,10 @@ export class SearchService {
 
                 const currencyData = getCurrencyData.call(this, currency);
 
-                let data = await service.getData({ assetCode: code, minDate, maxDate, rate: +rate });
-                if (rule.transform) data.data = rule.transform(data.data, +rate);
+                let inputs: GetDataParams = { assetCode: code, minDate, maxDate, rate: +rate };
+                if (rule.transformInputs) inputs = rule.transformInputs(inputs);
+                let data = await service.getData(inputs);
+                if (rule.transformData) data.data = rule.transformData(data.data, +rate);
 
                 if ((await currencyData) != null) {
                     data.data = convertCurrency(data.data, await currencyData);

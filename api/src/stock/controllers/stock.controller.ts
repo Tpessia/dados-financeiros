@@ -36,7 +36,6 @@ export class StockController {
 
     @Get('search')
     async search(@Query('ticker', QueryRequiredPipe) ticker: string): Promise<StockSearchData[]> {
-        if (ticker == '') return [];
         const data = await this.stockYahooSearchService.getData(ticker);
         return data;
     }

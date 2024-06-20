@@ -27,7 +27,7 @@ export class StockYahooSearchService {
 
     async getDto(ticker: string) {
         // TODO: add types
-        const response = await HttpService.get(`https://query2.finance.yahoo.com/v1/finance/search?q=${ticker}`);
+        const response = await HttpService.get(`https://query2.finance.yahoo.com/v1/finance/search?q=${ticker}`).catch(e => { throw `Invalid ticker search: ${ticker}`; });
         return response.data;
     }
 }

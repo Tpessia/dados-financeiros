@@ -21,6 +21,7 @@ export class GovBondDayTransparenteService extends BaseAssetService {
         super(DataSource.GovBondDayTransparente);
     }
 
+    // NTN-B/2040
     async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<GovBondData>> {
         if (minDate == null || maxDate == null) throw new Error('Invalid params: minDate, maxDate');
 
@@ -101,10 +102,12 @@ export class GovBondDayTransparenteService extends BaseAssetService {
             data.date = date.toDate();
             data.maturityDate = new Date(data.maturityDate);
 
-            data.assetCode = `${mappedType}:${extractIsoDateParts(data.maturityDate)[0]}`;
+            const year = extractIsoDateParts(data.maturityDate)[0];
+            data.assetCode = `${mappedType}/${year}`;
             data.value = data.buyPu;
         }
 
+        assetData.data = assetData.data.filter(e => e.assetCode === assetCode);
         assetData.data = sortBy(assetData.data, e => e.date);
 
         return assetData;
