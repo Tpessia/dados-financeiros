@@ -14,7 +14,9 @@ export class FixedRateService extends BaseAssetService {
     }
 
     async getData({ assetCode, minDate, maxDate, rate }: GetDataParams): Promise<AssetHistData<AssetData>> {
-        if (minDate == null || maxDate == null || rate == null) throw new Error('Invalid params: minDate, maxDate, rate');
+        if (minDate == null) throw new Error('Invalid params: minDate');
+        if (maxDate == null) throw new Error('Invalid params: maxDate');
+        if (rate == null) throw new Error('Invalid params: rate');
 
         const assetData: AssetHistData<AssetData> = {
             key: assetCode ?? AssetType.FixedRate,

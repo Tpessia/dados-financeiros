@@ -90,36 +90,37 @@ export class SearchService {
             return assetsByType[rule.name].map((asset) => async () => {
                 const service: BaseAssetService = await this.moduleRef.resolve(rule.service, undefined, { strict: false });
 
-                let [_, code, currency, rate] = asset.assetCode.match(/^([^\:\*]+)(?:\:(\w+))?(?:\*([\w\.]+))?/); // TSLA:USDBRL*1.5, USDBRL=X
+                const currOp = ':';
+                const rateOp = '*';
+                const regex = new RegExp(`^([^\\${currOp}\\${rateOp}]+)(?:\\${currOp}(\\w+))?(?:\\${rateOp}([\\w\\.]+))?`);
+                let [_, code, currency, rate] = asset.assetCode.match(regex); // TSLA:BRL*1.5, USDBRL=X
 
                 if (code == null || (rate != null && isNaN(+rate)))
                     throw new Error(`Invalid asset code: ${asset.assetCode}`);
 
                 if (rate == null) rate = '1';
 
-                const currencyData = getCurrencyData.call(this, currency);
-
                 let inputs: GetDataParams = { assetCode: code, minDate, maxDate, rate: +rate };
                 if (rule.transformInputs) inputs = rule.transformInputs(inputs);
                 let data = await service.getData(inputs);
                 if (rule.transformData) data.data = rule.transformData(data.data, +rate);
 
-                if ((await currencyData) != null) {
-                    data.data = convertCurrency(data.data, await currencyData);
-                    data.data.forEach(e => e.assetCode = `${code}:${currency}`);
+                if (currency != null && data.data[0] != null) {
+                    const assetCurrency = data.data[0].currency;
+                    if (assetCurrency != null) {
+                        const forexService: StockYahooService = await this.moduleRef.resolve(StockYahooService, undefined, { strict: false });
+                        const currencyData = await forexService.getData({ assetCode: `${assetCurrency}${currency}=X`, minDate, maxDate }).then(e => e.data);
+                        data.data = convertCurrency(data.data, currencyData);
+                        data.data.forEach(e => e.assetCode = `${code}:${currency}`);
+                    } else {
+                        data.data.forEach(e => { e.assetCode = `${code}:${currency}`; e.currency = currency; });
+                    }
                 }
 
                 data.data = cleanUpData(data.data);
                 data.key = asset.assetCode;
 
                 return data;
-
-                async function getCurrencyData(currency?: string) {
-                    if (currency == null) return null;
-                    const forexService = await this.moduleRef.resolve(StockYahooService, undefined, { strict: false });
-                    const currencyData = await forexService.getData({ assetCode: `${currency}=X`, minDate, maxDate }).then(e => e.data);
-                    return currencyData;
-                }
             });
         });
 

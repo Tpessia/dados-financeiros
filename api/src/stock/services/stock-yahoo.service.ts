@@ -22,10 +22,12 @@ export class StockYahooService extends BaseAssetService {
 
     // Inspired by: https://github.com/ranaroussi/yfinance/blob/master/yfinance/base.py
     async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<StockData>> {
-        if (assetCode == null || minDate == null || maxDate == null) throw new Error('Invalid params: assetCode, minDate, maxDate');
+        if (assetCode == null) throw new Error('Invalid params: assetCode');
+        if (minDate == null) throw new Error('Invalid params: minDate');
+        if (maxDate == null) throw new Error('Invalid params: maxDate');
 
         const assetData: AssetHistData<StockData> = {
-            key: assetCode ?? AssetType.Stock,
+            key: assetCode,
             type: AssetType.Stock,
             granularity: DataGranularity.Day,
             metadata: {
@@ -52,6 +54,7 @@ export class StockYahooService extends BaseAssetService {
             const low = stocksDto?.indicators?.quote?.[0]?.low?.[i];
             const close = stocksDto?.indicators?.quote?.[0]?.close?.[i];
             const adjClose = stocksDto?.indicators?.adjclose?.[0]?.adjclose?.[i];
+            const currency = stocksDto?.meta.currency;
 
             const dividend = stocksDto?.events?.dividends?.[timestamp];
             const dividendAmount = dividend?.amount;
@@ -63,10 +66,11 @@ export class StockYahooService extends BaseAssetService {
 
             // Map
 
-            const dataData: StockData = {
-                assetCode,
-                value: close,
+            const stockData: StockData = {
+                assetCode: assetCode,
                 date: date,
+                value: close,
+                currency: currency,
                 volume: volume,
                 open: open,
                 high: high,
@@ -78,7 +82,7 @@ export class StockYahooService extends BaseAssetService {
                 adjLow: low * adjRatio,
                 adjClose: adjClose,
                 dividendAmount: dividendAmount,
-                splitCoefficient: splitCoefficient
+                splitCoefficient: splitCoefficient,
             };
 
             // Validate
@@ -94,12 +98,12 @@ export class StockYahooService extends BaseAssetService {
                 assetData.metadata.errors.push({
                     date: date,
                     message: 'Invalid Data',
-                    data: JSON.stringify(dataData),
+                    data: JSON.stringify(stockData),
                 });
                 continue;
             }
 
-            assetData.data.push(dataData);
+            assetData.data.push(stockData);
         }
 
         return assetData;

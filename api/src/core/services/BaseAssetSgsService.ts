@@ -1,4 +1,4 @@
-import { castPercent, parseMoment, promiseRetry } from '@/@utils';
+import { castPercent, parseMoment, promiseRetry, tryParseJson } from '@/@utils';
 import { DataSource } from '@/core/enums/DataSource';
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
@@ -22,7 +22,8 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
     }
 
     async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<T>> {
-        if (minDate == null || maxDate == null) throw new Error('Invalid params: minDate, maxDate');
+        if (minDate == null) throw new Error('Invalid params: minDate');
+        if (maxDate == null) throw new Error('Invalid params: maxDate');
 
         const assetData: AssetHistData<T> = {
             key: assetCode ?? this.assetType,
@@ -44,7 +45,7 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
             const date = parseMoment(data.data, 'DD/MM/YYYY');
             const value = castPercent(+data.valor);
 
-            const parsed = { assetCode: this.assetType, date: date.toDate(), value } as T;
+            const parsed = { assetCode: this.assetType, date: date.toDate(), value, currency: 'BRL' } as T;
 
             assetData.data.push(parsed);
         }
@@ -59,11 +60,14 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
 
     // @Memoize({ cacheType: MemoizeCacheType.Storage })
     async getDto(): Promise<AssetSgsDto[]> {
-        const data = await promiseRetry(
-            () => HttpService.get<AssetSgsDto[]>(this.jsonUrl).then(r => r.data),
+        let data = await promiseRetry(
+            () => HttpService.get(this.jsonUrl, { responseType: 'text' }).then(r => r.data),
             3,
             err => this.logger.log(`Retry Error: ${err}`)
         );
+
+        data = tryParseJson<AssetSgsDto[]>(data, undefined, false);
+        if (!data) throw new Error(`[${this.assetType}] Invalid data from ${this.jsonUrl}`);
 
         return data;
     }

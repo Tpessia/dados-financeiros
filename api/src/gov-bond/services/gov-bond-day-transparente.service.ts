@@ -23,7 +23,8 @@ export class GovBondDayTransparenteService extends BaseAssetService {
 
     // NTN-B/2040
     async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<GovBondData>> {
-        if (minDate == null || maxDate == null) throw new Error('Invalid params: minDate, maxDate');
+        if (minDate == null) throw new Error('Invalid params: minDate');
+        if (maxDate == null) throw new Error('Invalid params: maxDate');
 
         const assetData: AssetHistData<GovBondData> = {
             key: assetCode ?? AssetType.GovBond,

@@ -11,6 +11,9 @@ export class ErrorResponse {
 
     @ApiProperty()
     error: string;
+
+    @ApiProperty()
+    stack: string;
 }
 
 @Catch()
@@ -35,7 +38,7 @@ export default class ErrorFilter implements ExceptionFilter<any> {
         const logError = `${errMsg}\n@ ${request.url}`;
         this.logger.error(logError, err.stack);
 
-        const errorMsg: ErrorResponse = { statusCode: status, error: errMsg };
+        const errorMsg: ErrorResponse = { statusCode: status, error: errMsg, stack: err.stack };
         response.status(status).json(responseWrapper(errorMsg));
     }
 }

@@ -22,12 +22,14 @@ export class StockYahooSearchService {
             score: e.score,
         })) ?? [];
 
-        return data.filter(e => e.type !== 'OPTION');
+        return data.filter(e => ['EQUITY','INDEX','CURRENCY','ETF','MUTUALFUND'].includes(e.type));
     }
 
     async getDto(ticker: string) {
         // TODO: add types
-        const response = await HttpService.get(`https://query2.finance.yahoo.com/v1/finance/search?q=${ticker}`).catch(e => { throw `Invalid ticker search: ${ticker}`; });
+        const response = await HttpService
+            .get(`https://query2.finance.yahoo.com/v1/finance/search?q=${ticker}`)
+            .catch(e => { throw `Invalid ticker search: ${ticker}`; });
         return response.data;
     }
 }

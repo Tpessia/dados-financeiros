@@ -13,3 +13,4 @@
 **/LICENSE
 **/.editorconfig
 **/Dockerfile
+**/docker-compose.yml

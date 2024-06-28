@@ -88,10 +88,11 @@ export class GovBondDayLastTdService extends BaseAssetService {
 
             assetData.data.push({
                 assetCode: assetCode,
+                date: date,
                 value: data.untrInvstmtVal,
+                currency: 'BRL',
                 assetType: mappedType,
                 maturityDate: maturityDate,
-                date: date!,
                 buyRate: castPercent(data.anulInvstmtRate),
                 sellRate: castPercent(data.anulRedRate),
                 buyPu: data.untrInvstmtVal,

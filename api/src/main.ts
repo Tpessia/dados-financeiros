@@ -49,8 +49,8 @@ async function bootstrap() {
   // Global Swagger
 
   const swaggerOpts = new DocumentBuilder()
-    .setTitle('Dados Financeiros API')
-    .setDescription('Dados Financeiros API')
+    .setTitle('Dados Financeiros')
+    .setDescription('https://github.com/Tpessia/dados-financeiros')
     .setVersion('1.0')
     // .addServer('/')
     // .addApiKey({
@@ -72,7 +72,7 @@ async function bootstrap() {
 
   // Listen
 
-  await app.listen(process.env.PORT, 'localhost', () => {
+  await app.listen(process.env.PORT, '0.0.0.0', () => {
     const address = app.getHttpServer().address();
     const hostname = address.family === 'IPv6' ? `[${address.address}]` : address.address;
     AppService.addInfo(`Listening on http://${hostname}:${address.port}/api/`);

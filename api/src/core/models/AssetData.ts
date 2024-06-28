@@ -9,4 +9,7 @@ export class AssetData {
 
   @ApiProperty()
   value: number;
+
+  @ApiProperty()
+  currency?: string;
 }

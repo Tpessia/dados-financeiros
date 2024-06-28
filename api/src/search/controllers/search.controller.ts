@@ -13,7 +13,7 @@ export class SearchController {
     constructor(private searchService: SearchService) {}
 
     @ApiOperation({ summary: 'Search by assetCodes' })
-    @ApiQuery({ name: 'assetCodes', description: 'e.g. TSLA, BOVA11.SA:USDBRL, IPCA.SA, FIXED\\*0.1, SELIC.SA\\*0.9' })
+    @ApiQuery({ name: 'assetCodes', description: 'e.g. TSLA, BOVA11.SA:USD, IPCA.SA, FIXED\\*0.1, SELIC.SA\\*0.9' })
     @ApiQuery({ name: 'minDate', example: '2020-01-01' })
     @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
     @ApiOkResponse({ type: AssetHistData<AssetData>, isArray: true })

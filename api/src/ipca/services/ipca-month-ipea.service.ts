@@ -21,7 +21,8 @@ export class IpcaMonthIpeaService extends BaseAssetService {
     }
 
     async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<IpcaData>> {
-        if (minDate == null || maxDate == null) throw new Error('Invalid params: minDate, maxDate');
+        if (minDate == null) throw new Error('Invalid params: minDate');
+        if (maxDate == null) throw new Error('Invalid params: maxDate');
 
         const assetData: AssetHistData<IpcaData> = {
             key: assetCode ?? AssetType.IPCA,
@@ -44,7 +45,7 @@ export class IpcaMonthIpeaService extends BaseAssetService {
             date = date.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
             const value = +(Math.pow(1 + castPercent(data.VALVALOR), 1/12) - 1).toFixed(4);
 
-            const parsed: IpcaData = { assetCode: AssetType.IPCA, date: date.toDate(), value };
+            const parsed: IpcaData = { assetCode: AssetType.IPCA, date: date.toDate(), value, currency: 'BRL' };
 
             assetData.data.push(parsed);
         }

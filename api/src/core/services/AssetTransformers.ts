@@ -22,6 +22,7 @@ export function dailyfyPercents(monthlyData: AssetData[], maxDate?: Date): Asset
           assetCode: data.assetCode,
           date: day,
           value: dailyValue,
+          currency: data.currency,
         });
       }
     }
@@ -34,10 +35,9 @@ export function assetfy(data: AssetData[], initValue: number): AssetData[] {
   const assetData: AssetData[] = [];
   let assetValue = initValue;
 
-  for (const { assetCode, date, value } of data) {
+  for (const { value, ...rest } of data) {
     assetData.push({
-      assetCode,
-      date,
+      ...rest,
       value: assetValue,
     });
 
@@ -49,16 +49,17 @@ export function assetfy(data: AssetData[], initValue: number): AssetData[] {
 
 export function convertCurrency<T extends AssetData>(data: T[], currency: AssetData[]): T[] {
   const convertedData: T[] = [];
-  let lastCurrencyValue: number;
+  let lastCurrency: AssetData;
 
   for (const assetData of data) {
     const currencyData = currency.find(c => dateToIsoStr(assetData.date) === dateToIsoStr(c.date));
-    if (currencyData) lastCurrencyValue = currencyData.value;
+    if (currencyData) lastCurrency = currencyData;
 
     const data: AssetData = {
       assetCode: assetData.assetCode,
       date: assetData.date,
-      value: assetData.value * lastCurrencyValue,
+      value: assetData.value * lastCurrency.value,
+      currency: lastCurrency.currency,
     };
 
     convertedData.push(data as any);
@@ -87,7 +88,7 @@ export function generateFixedRate(assetCode: string, start: Date, end: Date, ini
     const date = dates[i];
     const year = date.getFullYear();
     const periodNumber = i; // + 1;
-    const periodsPerYear = tradingDaysByYear.get(year)-1 || 252;
+    const periodsPerYear = tradingDaysByYear.get(year)-1 || 260;
     const rate = Math.pow(1 + annualIrr, periodNumber / periodsPerYear);
     data.push({ assetCode, date, value: initValue * rate });
   }
@@ -104,9 +105,9 @@ export function applyLeverage(data: AssetData[], leverage: number): AssetData[] 
   leveragedData.push({ ...data[0], value: currentValue });
 
   for (let i = 1; i < data.length; i++) {
-    const { assetCode, date } = data[i];
+    const { value, ...rest } = data[i];
     const previousValue = data[i - 1].value;
-    const dailyChange = data[i].value - previousValue;
+    const dailyChange = value - previousValue;
     const leveragedDailyChange = dailyChange * leverage;
     let leveragedValue = currentValue + leveragedDailyChange;
 
@@ -114,8 +115,7 @@ export function applyLeverage(data: AssetData[], leverage: number): AssetData[] 
     if (leveragedValue < 0) leveragedValue = 0;
 
     leveragedData.push({
-      assetCode,
-      date,
+      ...rest,
       value: leveragedValue,
     });
 
@@ -126,5 +126,5 @@ export function applyLeverage(data: AssetData[], leverage: number): AssetData[] 
 }
 
 export function cleanUpData(data: AssetData[]): AssetData[] {
-  return data.map(e => ({ assetCode: e.assetCode, date: e.date, value: e.value > 1 ? round(e.value, 2) : e.value }));
+  return data.map(e => ({ ...e, value: e.value > 1 ? round(e.value, 2) : e.value }));
 }
