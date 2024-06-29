@@ -13,7 +13,7 @@ import { SelicDaySgsService } from '@/selic/services/selic-day-sgs.service';
 import { StockYahooService } from '@/stock/services/stock-yahoo.service';
 import { Injectable, Scope, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { groupBy } from 'lodash';
+import { groupBy, sortBy } from 'lodash';
 
 interface AssetRule {
     name: string;
@@ -125,7 +125,9 @@ export class SearchService {
         });
 
         const data = await promiseParallel(tasks, 5);
-        return data;
+        const sortedData = sortBy(data, e => assetCodes.indexOf(e.data[0].assetCode));
+
+        return sortedData;
     }
 
     private getAssetRule(assetCode: string): AssetRule {
