@@ -30,7 +30,7 @@ export class SearchService {
         {
             name: AssetType.FixedRate,
             assetType: AssetType.FixedRate,
-            checkType: (assetCode) => assetCode.startsWith('FIXED'),
+            checkType: (assetCode) => assetCode.startsWith('FIXED'), // FIXED*0.1
             service: FixedRateService,
         },
         {
@@ -57,7 +57,7 @@ export class SearchService {
         {
             name: AssetType.GovBond,
             assetType: AssetType.GovBond,
-            checkType: (assetCode) => new RegExp(`^(${Object.values(GovBondType).join('|')})/\\d{4}\\.SA$`).test(assetCode),
+            checkType: (assetCode) => new RegExp(`^(${Object.values(GovBondType).join('|')})/\\d{4}\\.SA$`).test(assetCode), // LTN/2021.SA
             service: GovBondDayTransparenteService,
             transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: assetCode.replace('.SA', ''), ...inputs }),
             transformData: (data, rate) => applyLeverage(data, rate),
@@ -65,7 +65,7 @@ export class SearchService {
         {
             name: AssetType.Forex,
             assetType: AssetType.Forex,
-            checkType: (assetCode) => assetCode.endsWith('=X'),
+            checkType: (assetCode) => assetCode.endsWith('=X'), // USDBRL=X
             service: StockYahooService,
             transformData: (data, rate) => applyLeverage(data, rate),
         },
