@@ -45,7 +45,7 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
             const date = parseMoment(data.data, 'DD/MM/YYYY');
             const value = castPercent(+data.valor);
 
-            const parsed = { assetCode: this.assetType, date: date.toDate(), value, currency: 'BRL' } as T;
+            const parsed = { assetCode: assetCode ?? this.assetType, date: date.toDate(), value, currency: 'BRL' } as T;
 
             assetData.data.push(parsed);
         }

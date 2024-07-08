@@ -81,6 +81,9 @@ export class SearchService {
     constructor(private moduleRef: ModuleRef) {}
 
     async getAssets(assetCodes: string, minDate: Date, maxDate: Date): Promise<AssetHistData<AssetData>[]> {
+        minDate.setHours(0, 0, 0, 0);
+        maxDate.setHours(23, 59, 59, 999);
+
         const assets = assetCodes.split(',').map(a => ({ assetCode: a, rule: this.getAssetRule(a) }));
         const assetsByType = groupBy(assets, a => a.rule.name);
 
@@ -105,15 +108,15 @@ export class SearchService {
                 let data = await service.getData(inputs);
                 if (rule.transformData) data.data = rule.transformData(data.data, +rate);
 
-                if (currency != null && data.data[0] != null) {
-                    const assetCurrency = data.data[0].currency;
-                    if (assetCurrency != null) {
+                if (currency != null) {
+                    const assetCurrency = data.data[0]?.currency;
+                    if (assetCurrency != null && assetCurrency !== currency) {
                         const forexService: StockYahooService = await this.moduleRef.resolve(StockYahooService, undefined, { strict: false });
                         const currencyData = await forexService.getData({ assetCode: `${assetCurrency}${currency}=X`, minDate, maxDate }).then(e => e.data);
                         data.data = convertCurrency(data.data, currencyData);
                         data.data.forEach(e => e.assetCode = `${code}:${currency}`);
                     } else {
-                        data.data.forEach(e => { e.assetCode = `${code}:${currency}`; e.currency = currency; });
+                        data.data.forEach(e => { e.assetCode = `${code}:${currency}`; e.currency = currency; }); // For assets w/o base currency (e.g. FIXED)
                     }
                 }
 
@@ -125,7 +128,7 @@ export class SearchService {
         });
 
         const data = await promiseParallel(tasks, 5);
-        const sortedData = sortBy(data, e => assetCodes.indexOf(e.data[0].assetCode));
+        const sortedData = sortBy(data, e => assetCodes.indexOf(e.data[0]?.assetCode));
 
         return sortedData;
     }
