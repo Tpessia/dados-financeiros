@@ -1,4 +1,4 @@
-import { castPercent, parseMoment, promiseRetry, tryParseJson } from '@/@utils';
+import { Memoize, MemoizeCacheType, addDate, castPercent, dateToIsoStr, normalizeTimezone, parseMoment, promiseRetry, tryParseJson } from '@/@utils';
 import { DataSource } from '@/core/enums/DataSource';
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
@@ -14,6 +14,8 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
     protected granularity: DataGranularity;
     protected jsonUrl: string;
 
+    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -12));
+
     constructor(type: DataSource, assetType: AssetType, granularity: DataGranularity, code: string) {
         super(type);
         this.assetType = assetType;
@@ -21,18 +23,17 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
         this.jsonUrl = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${code}/dados?formato=json`;
     }
 
-    async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<T>> {
-        if (minDate == null) throw new Error('Invalid params: minDate');
-        if (maxDate == null) throw new Error('Invalid params: maxDate');
+    async getData(params: GetDataParams): Promise<AssetHistData<T>> {
+        this.validateParams(params, ['minDate','maxDate']);
 
         const assetData: AssetHistData<T> = {
-            key: assetCode ?? this.assetType,
+            key: params.assetCode ?? this.assetType,
             type: this.assetType,
             granularity: this.granularity,
             metadata: {
                 errors: [],
-                minDate,
-                maxDate,
+                minDate: params.minDate,
+                maxDate: params.maxDate,
             },
             data: [],
         };
@@ -45,21 +46,28 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
             const date = parseMoment(data.data, 'DD/MM/YYYY');
             const value = castPercent(+data.valor);
 
-            const parsed = { assetCode: assetCode ?? this.assetType, date: date.toDate(), value, currency: 'BRL' } as T;
+            const parsed = { assetCode: params.assetCode ?? this.assetType, date: date.toDate(), value, currency: 'BRL' } as T;
 
             assetData.data.push(parsed);
         }
 
-        assetData.data = assetData.data.filter(e => e.date >= minDate);
-        assetData.data = assetData.data.filter(e => maxDate >= e.date);
+        assetData.data = assetData.data.filter(e => e.date >= params.minDate);
+        assetData.data = assetData.data.filter(e => params.maxDate >= e.date);
 
         assetData.data = sortBy(assetData.data, e => e.date);
 
         return assetData;
     }
 
-    // @Memoize({ cacheType: MemoizeCacheType.Storage })
+    @Memoize({
+        cacheType: MemoizeCacheType.Storage,
+        // funcKey: ,
+        itemKey: (config, args, cache) => BaseAssetSgsService.cacheKey(),
+        onCall: (config, args, cache) => cache.invalidate(e => e !== BaseAssetSgsService.cacheKey())
+    })
     async getDto(): Promise<AssetSgsDto[]> {
+        this.logger.log(`--- Fetching data for ${BaseAssetSgsService.cacheKey()} ---`);
+
         let data = await promiseRetry(
             () => HttpService.get(this.jsonUrl, { responseType: 'text' }).then(r => r.data),
             3,

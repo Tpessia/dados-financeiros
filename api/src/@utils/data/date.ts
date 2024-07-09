@@ -240,9 +240,10 @@ export function normalizeTimezone(date: string | Date | null | undefined) {
     return new Date(date.getTime() + date.getTimezoneOffset() * 60 * 1000);
 }
 
-export function addDays(date: Date, days: number) {
-    var result = new Date(date);
+export function addDate(date: Date, days: number = 0, hours: number = 0, minutes: number = 0, seconds: number = 0, milliseconds: number = 0): Date {
+    const result = new Date(date);
     result.setDate(result.getDate() + days);
+    result.setHours(result.getHours() + hours, result.getMinutes() + minutes, result.getSeconds() + seconds, result.getMilliseconds() + milliseconds);
     return result;
 }
 

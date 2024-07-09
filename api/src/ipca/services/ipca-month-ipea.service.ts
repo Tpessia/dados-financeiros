@@ -1,4 +1,4 @@
-import { castPercent, normalizeTimezone, parseMoment, promiseRetry } from '@/@utils';
+import { Memoize, MemoizeCacheType, addDate, castPercent, dateToIsoStr, normalizeTimezone, parseMoment, promiseRetry } from '@/@utils';
 import { DataSource } from '@/core/enums/DataSource';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
@@ -16,22 +16,23 @@ import { sortBy } from 'lodash';
 export class IpcaMonthIpeaService extends BaseAssetService {
     private jsonUrl = "http://ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO='PAN12_IPCAG12')";
 
+    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -12));
+
     constructor() {
         super(DataSource.IpcaMonthIpea);
     }
 
-    async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<IpcaData>> {
-        if (minDate == null) throw new Error('Invalid params: minDate');
-        if (maxDate == null) throw new Error('Invalid params: maxDate');
+    async getData(params: GetDataParams): Promise<AssetHistData<IpcaData>> {
+        this.validateParams(params, ['minDate','maxDate']);
 
         const assetData: AssetHistData<IpcaData> = {
-            key: assetCode ?? AssetType.IPCA,
+            key: params.assetCode ?? AssetType.IPCA,
             type: AssetType.IPCA,
             granularity: DataGranularity.Month,
             metadata: {
                 errors: [],
-                minDate,
-                maxDate,
+                minDate: params.minDate,
+                maxDate: params.maxDate,
             },
             data: [],
         };
@@ -50,15 +51,19 @@ export class IpcaMonthIpeaService extends BaseAssetService {
             assetData.data.push(parsed);
         }
 
-        assetData.data = assetData.data.filter(e => e.date >= minDate);
-        assetData.data = assetData.data.filter(e => maxDate >= e.date);
+        assetData.data = assetData.data.filter(e => e.date >= params.minDate);
+        assetData.data = assetData.data.filter(e => params.maxDate >= e.date);
 
         assetData.data = sortBy(assetData.data, e => e.date);
 
         return assetData;
     }
 
-    // @Memoize({ cacheType: MemoizeCacheType.Storage })
+    @Memoize({
+        cacheType: MemoizeCacheType.Storage,
+        itemKey: (config, args, cache) => IpcaMonthIpeaService.cacheKey(),
+        onCall: (config, args, cache) => cache.invalidate(e => e !== IpcaMonthIpeaService.cacheKey())
+    })
     async getDto(): Promise<IpcaMonthIpeaDto[]> {
         const data = await promiseRetry(
             () => HttpService.get<{ value: IpcaMonthIpeaDto[] }>(this.jsonUrl).then(r => r.data?.value),

@@ -13,24 +13,22 @@ export class FixedRateService extends BaseAssetService {
         super(DataSource.FixedRate);
     }
 
-    async getData({ assetCode, minDate, maxDate, rate }: GetDataParams): Promise<AssetHistData<AssetData>> {
-        if (minDate == null) throw new Error('Invalid params: minDate');
-        if (maxDate == null) throw new Error('Invalid params: maxDate');
-        if (rate == null) throw new Error('Invalid params: rate');
+    async getData(params: GetDataParams): Promise<AssetHistData<AssetData>> {
+        this.validateParams(params, ['minDate','maxDate','rate']);
 
         const assetData: AssetHistData<AssetData> = {
-            key: assetCode ?? AssetType.FixedRate,
+            key: params.assetCode ?? AssetType.FixedRate,
             type: AssetType.FixedRate,
             granularity: DataGranularity.Day,
             metadata: {
                 errors: [],
-                minDate,
-                maxDate,
+                minDate: params.minDate,
+                maxDate: params.maxDate,
             },
             data: [],
         };
 
-        assetData.data = generateFixedRate(AssetType.FixedRate, minDate, maxDate, initValue, rate);
+        assetData.data = generateFixedRate(AssetType.FixedRate, params.minDate, params.maxDate, initValue, params.rate);
 
         return assetData;
     }

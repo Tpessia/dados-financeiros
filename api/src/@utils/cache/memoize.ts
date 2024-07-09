@@ -1,5 +1,8 @@
 import { jsonDateReviver, readFileSync, runOrResolve, tryParseJson, tryStringifyJson, writeFileSync } from '@/@utils';
+import { createHash } from 'crypto';
 import * as fs from 'fs';
+import { isEqual, merge } from 'lodash';
+import { RFC_2822 } from 'moment-timezone';
 import { tmpdir } from 'os';
 import * as path from 'path';
 
@@ -11,11 +14,19 @@ export type MemoizedProps = { _memoizeCache: MemoizeCache<any, any> };
 export type Memoized<T extends TypedFunction> = ((...args: Parameters<T>) => ReturnType<T>) & MemoizedProps;
 
 export interface MemoizeConfig {
-  cacheType?: MemoizeCacheType | MemoizeCache<any, any>,
-  cacheDir?: string,
-  funcKey?: string,
-  cacheConfig?: any,
-  maxAge?: number, // seconds
+  funcKey?: (config: MemoizeConfig) => string;
+  itemKey?: (config: MemoizeConfig, args: any[], cache: MemoizeCache<any, any>) => string;
+  onCall?: (config: MemoizeConfig, args: any[], cache: MemoizeCache<any, any>) => void;
+  cacheType?: MemoizeCacheType | MemoizeCache<any, any>;
+  cacheConfig?: MemoizeCacheConfig;
+  _target?: Object;
+  _method?: PropertyDescriptor;
+  _instance?: Object;
+}
+export interface MemoizeCacheConfig {
+  cacheDir?: string;
+  cachePath?: string;
+  maxAge?: number; // seconds
 }
 
 export enum MemoizeCacheType {
@@ -32,12 +43,13 @@ export interface MemoizeCacheItem<T extends TypedFunction> {
   value: ReturnType<T>,
 }
 
-export type MemoizeCacheMap<T extends TypedFunction> = Map<string, MemoizeCacheItem<T>>;
+export type MemoizeCacheMap<T extends TypedFunction> = Record<string, MemoizeCacheItem<T>>;
 
 export interface MemoizeCache<T extends TypedFunction, C> {
   disabled?: boolean,
-  config?: any,
+  config?: MemoizeConfig['cacheConfig'],
   cache: C,
+  state: any,
   memoizedFunc?: Memoized<ReturnType<T>>,
   init: () => void,
   get: (key: string) => MemoizeCacheItem<T> | undefined,
@@ -51,22 +63,27 @@ export interface MemoizeCache<T extends TypedFunction, C> {
 
 export const globalMemoizeConfig: Partial<MemoizeConfig> = { // HOW-TO: globalMemoizeConfig.maxAge = 10;
   cacheType: MemoizeCacheType.Memory,
-  cacheDir: path.join(tmpdir(), `/${path.basename(process.cwd())}-${path.basename(process.argv[1])}`),
+  cacheConfig: {
+    cacheDir: path.join(tmpdir(), `/${path.basename(process.cwd())}-${path.basename(process.argv[1])}`),
+  }
 };
 
 const memoizeMemory = <T extends TypedFunction>(config: MemoizeConfig) => {
   const memoryCache: MemoizeCache<T, MemoizeCacheMap<T>> = {
     config: config.cacheConfig,
-    cache: new Map<string, ReturnType<T>>(),
-    init: () => memoryCache.cache ??= new Map<string, MemoizeCacheItem<T>>(), 
-    get: key => memoryCache.cache.has(key) ? memoryCache.cache.get(key) : undefined,
+    cache: {},
+    state: {},
+    init: () => memoryCache.cache ??= {}, 
+    get: key => memoryCache.cache[key],
     set: (key, value) => {
-      runOrResolve(value, resolved => memoryCache.cache.set(key, resolved));
+      runOrResolve(value, resolved => memoryCache.cache[key] = resolved);
     },
-    delete: key => memoryCache.cache.delete(key),
-    flush: () => memoryCache.cache.clear(),
+    delete: key => delete memoryCache.cache[key],
+    flush: () => {
+      memoryCache.cache = {};
+    },
     invalidate: predicate => {
-      const cacheArr = Array.from(memoryCache.cache);
+      const cacheArr = Object.entries(memoryCache.cache);
       for (let cacheItem of cacheArr) {
         const isInvalid = predicate(cacheItem[0], cacheItem[1]);
         if (isInvalid) memoryCache.delete(cacheItem[0]);
@@ -75,32 +92,53 @@ const memoizeMemory = <T extends TypedFunction>(config: MemoizeConfig) => {
   };
 
   return memoryCache;
-}
+};
 
 const memoizeStorage = <T extends TypedFunction>(config: MemoizeConfig) => {
-  // Fetch + Modify + Save
-  const syncCache = (set?: (cacheObj: MemoizeCacheMap<T>) => MemoizeCacheMap<T> | Promise<MemoizeCacheMap<T>>) => {
-    const prevCache = tryParseJson<MemoizeCacheMap<T>>(readFileSync(storageCache.config.cachePath), jsonDateReviver);
-    const newCache = set?.(prevCache) ?? prevCache;
+  // TODO: do not load all to memory
+
+  const getFileInfo = (cachePath: string) => {
+    if (!fs.existsSync(cachePath)) return null;
+    const fileStats = fs.statSync(cachePath);
+    const fileId = `${fileStats.ino}-${fileStats.size}-${fileStats.mtimeMs}`;
+    const hash = createHash('md5').update(fileId).digest('hex');
+    return {
+      size: fileStats.size,
+      hash,
+    };
+  };
+
+  // Create + Fetch + Modify + Save
+  const syncCache = (callback?: (cacheObj: MemoizeCacheMap<T>) => MemoizeCacheMap<T> | Promise<MemoizeCacheMap<T>>) => {
+    const fileInfoKey = '_fileInfo';
+    const fileInfo = getFileInfo(storageCache.config.cachePath);
+    const oldFileInfo = storageCache.state[fileInfoKey];
+    const fileChanged = fileInfo && (oldFileInfo == null || oldFileInfo.hash !== fileInfo.hash);
+
+    const prevCache = fileChanged
+      ? tryParseJson<MemoizeCacheMap<T>>(readFileSync(storageCache.config.cachePath), jsonDateReviver)
+      : storageCache.cache;
+    const newCache = callback?.(prevCache) ?? prevCache;
 
     return runOrResolve(newCache, resolved => {
       storageCache.cache = resolved;
-      writeFileSync(storageCache.config.cachePath, tryStringifyJson(resolved));
+      if (!isEqual(prevCache, resolved) || fileInfo == null)
+        writeFileSync(storageCache.config.cachePath, tryStringifyJson(resolved));
+      const newFileInfo = getFileInfo(storageCache.config.cachePath);
+      storageCache.state[fileInfoKey] = newFileInfo;
       return storageCache.cache;
     });
   }
 
+  if (config.cacheConfig.cacheDir == null && config.cacheConfig.cachePath == null) throw new Error('Invalid cacheDir (null)');
+  const defaultConfig: MemoizeCacheConfig = { cachePath: path.join(config.cacheConfig.cacheDir, `memoize-${config.funcKey(config)}.json`) };
+
   const storageCache: MemoizeCache<T, MemoizeCacheMap<T>> = {
-    config: {
-      cachePath: path.join(config.cacheDir, `memoize-${config.funcKey}.json`),
-      ...config.cacheConfig,
-    },
-    cache: new Map<string, ReturnType<T>>(),
+    config: merge(defaultConfig, config.cacheConfig),
+    cache: {},
+    state: {},
     init: () => {
-      storageCache.cache ??= new Map<string, MemoizeCacheItem<T>>();
-      if (!fs.existsSync(storageCache.config.cachePath)) {
-        writeFileSync(storageCache.config.cachePath, JSON.stringify({}));
-      }
+      syncCache();
     },
     get: key => {
       const cache = syncCache() as object;
@@ -112,7 +150,10 @@ const memoizeStorage = <T extends TypedFunction>(config: MemoizeConfig) => {
     delete: key => {
       syncCache(cache => { delete cache[key]; return cache; });
     },
-    flush: () => fs.existsSync(storageCache.config.cachePath) && fs.unlinkSync(storageCache.config.cachePath),
+    flush: () => {
+      fs.existsSync(storageCache.config.cachePath) && fs.unlinkSync(storageCache.config.cachePath);
+      storageCache.cache = {};
+    },
     invalidate: predicate => {
       syncCache(cache => {
         for (let cacheKey in cache) {
@@ -125,7 +166,7 @@ const memoizeStorage = <T extends TypedFunction>(config: MemoizeConfig) => {
   };
 
   return storageCache;
-}
+};
 
 const cacheTypes: Record<MemoizeCacheType, (config: MemoizeConfig) => MemoizeCache<any, any>> = {
   [MemoizeCacheType.Memory]: memoizeMemory,
@@ -135,33 +176,34 @@ const cacheTypes: Record<MemoizeCacheType, (config: MemoizeConfig) => MemoizeCac
 // FUNCTIONS
 
 export function memoize<T extends (...args: any[]) => Promise<any>>(func: Memoized<T>, config: MemoizeConfig): Memoized<T> {
-  config = { ...globalMemoizeConfig, ...config };
+  config = merge(globalMemoizeConfig, config);
 
   if (config.funcKey == null) throw new Error('Invalid funcKey');
 
   const cache = isMemoizeCacheType(config.cacheType) ? cacheTypes[config.cacheType](config) : config.cacheType;
 
   const memoized: Memoized<T> = function (...args: Parameters<T>): ReturnType<T> {
-    config = { ...globalMemoizeConfig, ...config };
-
-    if (cache.disabled) return func(...args);
+    if (cache.disabled) {
+      config.onCall?.(config, args, cache);
+      return func(...args);
+    }
 
     cache.init();
-    
-    const paramsKey = JSON.stringify(args);
+    config.onCall?.(config, args, cache);
 
-    const cacheEntry = cache.get(paramsKey);
+    const itemKey = config.itemKey?.(config, args, cache) ?? JSON.stringify(args);
+    const cacheEntry = cache.get(itemKey);
 
     if (cacheEntry !== undefined) {
       const cacheAge = (Date.now() - cacheEntry.date.getTime()) / 1000;
-      const validEntry = config.maxAge ? cacheAge < config.maxAge : true;
+      const validEntry = config.cacheConfig.maxAge ? cacheAge < config.cacheConfig.maxAge : true;
       if (validEntry) return cacheEntry.value;
-      else cache.delete(paramsKey);
+      else cache.delete(itemKey);
     }
 
     const result = func(...args);
 
-    cache.set(paramsKey, runOrResolve(result, resolved => ({ date: new Date(), value: resolved })));
+    cache.set(itemKey, runOrResolve(result, resolved => ({ date: new Date(), value: resolved })));
 
     return result;
   };
@@ -174,25 +216,26 @@ export function memoize<T extends (...args: any[]) => Promise<any>>(func: Memoiz
 
 // Decorator factory (runs once with params)
 export function Memoize(config?: MemoizeConfig) { // use with "@Memoize()"
-
   // Decorator function (runs once before constructor)
-  return function (target: any, name: string, descriptor: PropertyDescriptor) {
-    const originalMethod = descriptor.value;
-
-    config ??= {} as any;
-    config.funcKey ??= `${target?.constructor?.name}:${originalMethod?.name}`;
-
+  return function (target: Object, name: string, descriptor: PropertyDescriptor) {
     // Decorator descriptor (runs on every call)
     return {
       configurable: true,
       get() {
-        const memoized = memoize(originalMethod.bind(this), config);
-        // memoized._funcValue = this._funcValue;
+        config ??= {} as any;
+        config._target = target;
+        config._method = descriptor;
+        config._instance = this;
+        config.funcKey ??= () => `${this?.constructor?.name}:${config._method.value?.name}`;
+
+        const memoized = memoize(config._method.value.bind(this), config);
+
         Object.defineProperty(this, name, {
           value: memoized,
           configurable: true,
           writable: true,
         });
+
         return memoized;
       },
     };

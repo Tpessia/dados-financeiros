@@ -2,7 +2,7 @@ import { AppModule } from '@/app.module';
 import { SearchService } from '@/search/services/search.service';
 import { SelicDaySgsService } from '@/selic/services/selic-day-sgs.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { addDays, businessDaysInYear } from '@/@utils';
+import { addDate, businessDaysInYear } from '@/@utils';
 import { round } from 'lodash';
 
 describe('SearchService', () => {
@@ -25,7 +25,7 @@ describe('SearchService', () => {
       const startDate = new Date(2024, 0, 1);
       const dateLength = 5;
 
-      const data = await service.getAssets(`FIXED*${rate}`, startDate, addDays(startDate, dateLength));
+      const data = await service.getAssets(`FIXED*${rate}`, startDate, addDate(startDate, dateLength));
 
       const assetData = data[0].data;
       const value = round(1000 * Math.pow(1 + rate, (dateLength-1) / (businessDaysInYear(startDate.getFullYear())-1)), 2);

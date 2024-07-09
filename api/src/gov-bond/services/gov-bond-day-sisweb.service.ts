@@ -24,23 +24,22 @@ export class GovBondDaySiswebService extends BaseAssetService {
         super(DataSource.GovBondDaySysweb);
     }
 
-    async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<GovBondData>> {
-        if (minDate == null) throw new Error('Invalid params: minDate');
-        if (maxDate == null) throw new Error('Invalid params: maxDate');
+    async getData(params: GetDataParams): Promise<AssetHistData<GovBondData>> {
+        this.validateParams(params, ['minDate','maxDate']);
 
         const assetData: AssetHistData<GovBondData> = {
-            key: assetCode ?? AssetType.GovBond,
+            key: params.assetCode ?? AssetType.GovBond,
             type: AssetType.GovBond,
             granularity: DataGranularity.Day,
             metadata: {
                 errors: [],
-                minDate,
-                maxDate,
+                minDate: params.minDate,
+                maxDate: params.maxDate,
             },
             data: [],
         };
 
-        const dto = await this.getDto(minDate?.getFullYear());
+        const dto = await this.getDto(params.minDate?.getFullYear());
 
         // Map
 
@@ -111,8 +110,8 @@ export class GovBondDaySiswebService extends BaseAssetService {
 
                 validData = validData.sort((a, b) => a.date > b.date ? -1 : b.date > a.date ? 1 : 0);
 
-                validData = validData.filter(e => e.date >= minDate);
-                validData = validData.filter(e => maxDate >= e.date);
+                validData = validData.filter(e => e.date >= params.minDate);
+                validData = validData.filter(e => params.maxDate >= e.date);
 
                 assetData.data = assetData.data.concat(validData);
             }

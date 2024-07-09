@@ -21,24 +21,22 @@ export class StockYahooService extends BaseAssetService {
     }
 
     // Inspired by: https://github.com/ranaroussi/yfinance/blob/master/yfinance/base.py
-    async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<StockData>> {
-        if (assetCode == null) throw new Error('Invalid params: assetCode');
-        if (minDate == null) throw new Error('Invalid params: minDate');
-        if (maxDate == null) throw new Error('Invalid params: maxDate');
+    async getData(params: GetDataParams): Promise<AssetHistData<StockData>> {
+        this.validateParams(params, ['minDate','maxDate','assetCode']);
 
         const assetData: AssetHistData<StockData> = {
-            key: assetCode,
+            key: params.assetCode,
             type: AssetType.Stock,
             granularity: DataGranularity.Day,
             metadata: {
                 errors: [],
-                minDate,
-                maxDate,
+                minDate: params.minDate,
+                maxDate: params.maxDate,
             },
             data: [],
         };
 
-        const dto = await this.getDto(assetCode, minDate, maxDate);
+        const dto = await this.getDto(params.assetCode, params.minDate, params.maxDate);
 
         // Map
 
@@ -67,7 +65,7 @@ export class StockYahooService extends BaseAssetService {
             // Map
 
             const stockData: StockData = {
-                assetCode: assetCode,
+                assetCode: params.assetCode,
                 date: date,
                 value: close,
                 currency: currency,
@@ -112,8 +110,8 @@ export class StockYahooService extends BaseAssetService {
     async getDto(ticker: string, minDate: Date, maxDate: Date) {
         const params: StocksYahooParams = {
             interval: StocksYahooInterval.Day1,
-            period1: +dateToUnix(minDate).toFixed(),
-            period2: +dateToUnix(maxDate).toFixed(),
+            period1: +Math.ceil(dateToUnix(minDate)),
+            period2: +Math.floor(dateToUnix(maxDate)),
             events: 'div,splits', // div,splits,earn / all
             includePrePost: true,
             includeAdjustedClose: true,

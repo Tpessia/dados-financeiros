@@ -11,6 +11,14 @@ export abstract class BaseAssetService {
   }
 
   public abstract getData(params: GetDataParams): Promise<AssetHistData<AssetData>>;
+
+  protected validateParams(params: GetDataParams, validate: (keyof GetDataParams)[]): void {
+    if (validate.includes('assetCode') && params.assetCode == null) throw new Error('Invalid params: assetCode');
+    if (validate.includes('minDate') && params.minDate == null) throw new Error('Invalid params: minDate');
+    if (validate.includes('maxDate') && params.maxDate == null) throw new Error('Invalid params: maxDate');
+    if (validate.includes('rate') && params.rate == null) throw new Error('Invalid params: rate');
+    if (validate.includes('minDate') && validate.includes('maxDate') && params.minDate > params.maxDate) throw new Error('Invalid params: minDate > maxDate');
+  }
 }
 
 export interface GetDataParams {

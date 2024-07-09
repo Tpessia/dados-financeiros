@@ -1,4 +1,4 @@
-import { arrayDistinct, castPercent, extractIsoDateParts, isValidDate, parseDate, parseHeaderMatrix, parseMoment, promiseRetry } from '@/@utils';
+import { Memoize, MemoizeCacheType, addDate, arrayDistinct, castPercent, dateToIsoStr, extractIsoDateParts, isValidDate, normalizeTimezone, parseDate, parseHeaderMatrix, parseMoment, promiseRetry } from '@/@utils';
 import { DataSource } from '@/core/enums/DataSource';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
@@ -17,23 +17,24 @@ import * as xlsx from 'xlsx';
 export class GovBondDayTransparenteService extends BaseAssetService {
     private csvUrl = 'https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv';
 
+    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -12));
+
     constructor() {
         super(DataSource.GovBondDayTransparente);
     }
 
     // NTN-B/2040
-    async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<GovBondData>> {
-        if (minDate == null) throw new Error('Invalid params: minDate');
-        if (maxDate == null) throw new Error('Invalid params: maxDate');
+    async getData(params: GetDataParams): Promise<AssetHistData<GovBondData>> {
+        this.validateParams(params, ['minDate','maxDate']);
 
         const assetData: AssetHistData<GovBondData> = {
-            key: assetCode ?? AssetType.GovBond,
+            key: params.assetCode ?? AssetType.GovBond,
             type: AssetType.GovBond,
             granularity: DataGranularity.Day,
             metadata: {
                 errors: [],
-                minDate,
-                maxDate,
+                minDate: params.minDate,
+                maxDate: params.maxDate,
             },
             data: [],
         };
@@ -45,8 +46,8 @@ export class GovBondDayTransparenteService extends BaseAssetService {
         const header = ['assetType','maturityDate','date','buyRate','sellRate','buyPu','sellPu','basePu'];
         assetData.data = parseHeaderMatrix<GovBondData>(header, dto.rawJson!);
 
-        assetData.data = assetData.data.filter(e => e.date >= minDate);
-        assetData.data = assetData.data.filter(e => maxDate >= e.date);
+        assetData.data = assetData.data.filter(e => e.date >= params.minDate);
+        assetData.data = assetData.data.filter(e => params.maxDate >= e.date);
 
         assetData.metadata.assetTypes = arrayDistinct(assetData.data.map(e => e.assetType));
 
@@ -105,17 +106,25 @@ export class GovBondDayTransparenteService extends BaseAssetService {
 
             const year = extractIsoDateParts(data.maturityDate)[0];
             data.assetCode = `${mappedType}/${year}`;
+
             data.value = data.buyPu;
+            data.currency = 'BRL';
         }
 
-        assetData.data = assetData.data.filter(e => e.assetCode === assetCode);
+        assetData.data = params.assetCode != null ? assetData.data.filter(e => e.assetCode === params.assetCode) : assetData.data;
         assetData.data = sortBy(assetData.data, e => e.date);
 
         return assetData;
     }
 
-    // @Memoize({ cacheType: MemoizeCacheType.Storage }) // TODO: cache once a day
+    @Memoize({
+        cacheType: MemoizeCacheType.Storage,
+        itemKey: (config, args, cache) => GovBondDayTransparenteService.cacheKey(),
+        onCall: (config, args, cache) => cache.invalidate(e => e !== GovBondDayTransparenteService.cacheKey())
+    })
     async getDto(): Promise<GovBondDayTransparenteDto> {
+        this.logger.log(`--- Fetching data for ${GovBondDayTransparenteService.cacheKey()} ---`);
+
         const file = await promiseRetry(
             () => HttpService.get(this.csvUrl, { responseType: 'arraybuffer' }).then(r => Buffer.from(r.data, 'binary')),
             3,
@@ -123,7 +132,7 @@ export class GovBondDayTransparenteService extends BaseAssetService {
         );
 
         const assetsData: GovBondDayTransparenteDto = {};
-        assetsData.file = file,
+        // assetsData.file = file;
         assetsData.workBook = xlsx.read(file, { type: 'buffer', raw: true }); // cellDates: false
         assetsData.workSheets = Object.entries(assetsData.workBook.Sheets);
         const workSheet = assetsData.workSheets[0][1];

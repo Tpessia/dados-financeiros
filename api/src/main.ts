@@ -12,7 +12,7 @@ async function bootstrap() {
 
   AppService.init();
 
-  globalMemoizeConfig.cacheDir = AppService.appCacheDir;
+  globalMemoizeConfig.cacheConfig.cacheDir = AppService.appCacheDir;
 
   const logLevels: LogLevel[] = process.env.NODE_ENV === 'prod'
     ? ['error', 'warn', 'log']
@@ -50,7 +50,7 @@ async function bootstrap() {
 
   const swaggerOpts = new DocumentBuilder()
     .setTitle('Dados Financeiros')
-    .setDescription('https://github.com/Tpessia/dados-financeiros')
+    .setDescription('GitHub: <a href="https://github.com/Tpessia/dados-financeiros" target="_blank">https://github.com/Tpessia/dados-financeiros</a>\n\nPlatform: <a href="https://InvestTester.com" target="_blank">https://InvestTester.com</a>')
     .setVersion('1.0')
     // .addServer('/')
     // .addApiKey({
