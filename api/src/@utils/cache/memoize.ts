@@ -226,7 +226,7 @@ export function Memoize(config?: MemoizeConfig) { // use with "@Memoize()"
         config._target = target;
         config._method = descriptor;
         config._instance = this;
-        config.funcKey ??= () => `${this?.constructor?.name}:${config._method.value?.name}`;
+        config.funcKey ??= () => `${config._instance?.constructor?.name}:${config._method.value?.name}`;
 
         const memoized = memoize(config._method.value.bind(this), config);
 

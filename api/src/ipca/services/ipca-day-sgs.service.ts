@@ -12,7 +12,7 @@ import { Injectable, Scope } from '@nestjs/common';
 @Injectable({ scope: Scope.DEFAULT })
 export class IpcaDaySgsService extends BaseAssetService {
     constructor(private ipcaMonthSgsService: IpcaMonthSgsService) {
-        super(DataSource.IpcaDailySgs);
+        super(DataSource.IpcaDaySgs);
     }
 
     async getData({ assetCode, minDate, maxDate }: GetDataParams): Promise<AssetHistData<IpcaData>> {

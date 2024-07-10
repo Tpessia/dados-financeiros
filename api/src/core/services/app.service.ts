@@ -30,7 +30,7 @@ export class AppService {
 
         if (this.envFile) dotenv.configDotenv({ path: this.envFile, override: true });
 
-        this.addInfo(`NODE_ENV: ${process.env['NODE_ENV']}`);
+        this.addInfo(`NODE_ENV: ${process.env.NODE_ENV}`);
     }
 
     static async register(app: INestApplication) {

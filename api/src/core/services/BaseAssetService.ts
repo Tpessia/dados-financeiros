@@ -6,7 +6,7 @@ import { Logger } from '@nestjs/common';
 export abstract class BaseAssetService {
   protected logger: Logger;
 
-  constructor(type: DataSource) {
+  constructor(public type: DataSource) {
     this.logger = new Logger(type);
   }
 

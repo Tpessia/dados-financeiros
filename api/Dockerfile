@@ -2,6 +2,8 @@
 
 FROM node:20.12.2-bullseye AS build
 
+ARG NODE_OPTIONS
+
 WORKDIR /app
 
 COPY package*.json .
@@ -16,6 +18,11 @@ RUN npm run build
 
 FROM node:20.12.2-bullseye AS run
 
+ARG ENV=local
+ENV NODE_ENV=${ENV}
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=${NODE_OPTIONS}
+
 WORKDIR /app
 
 RUN apt-get update
@@ -26,10 +33,10 @@ RUN groupadd -r appuser
 RUN useradd -r -g appuser -m -d /app -s /bin/bash --uid 2000 appuser
 
 COPY package*.json .
-RUN npm install --only=prod
+RUN npm install --omit=dev
 
 COPY --from=build /app/dist /app/dist
-COPY .env.prod .
+COPY .env.${ENV} .
 
 RUN chown -R appuser:appuser /app
 

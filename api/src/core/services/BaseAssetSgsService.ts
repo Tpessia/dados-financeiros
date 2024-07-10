@@ -61,7 +61,6 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
 
     @Memoize({
         cacheType: MemoizeCacheType.Storage,
-        // funcKey: ,
         itemKey: (config, args, cache) => BaseAssetSgsService.cacheKey(),
         onCall: (config, args, cache) => cache.invalidate(e => e !== BaseAssetSgsService.cacheKey())
     })

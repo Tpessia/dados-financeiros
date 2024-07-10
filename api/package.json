@@ -5,12 +5,14 @@
   "scripts": {
     "init": "npm i -g @nestjs/cli@10.3.2 && npm install",
     "start": "cross-env NODE_ENV=local nest start --watch",
-    "start:prod": "cross-env NODE_ENV=prod node dist/main",
+    "start:prod": "node dist/main",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
+    "docker:build": "sudo docker build -t dados-financeiros -f Dockerfile --build-arg ENV=local .",
+    "docker:run": "sudo docker run -it -p 3000:3000 --name dados-financeiros dados-financeiros:latest",
     "docker:sast": "sudo docker run --rm -v \"${PWD}:/src\" returntocorp/semgrep semgrep --metrics=off --no-git-ignore --config \"/src/.semgrep.yml\" --config \"p/secrets\" --config \"p/gitleaks\" --config \"p/owasp-top-ten\" --config \"p/cwe-top-25\" --config \"p/ci\" --config \"p/security-audit\" --config \"p/javascript\" --config \"p/typescript\" --config \"p/docker\" --config \"p/nodejs\" /src # --verbose"
   },
   "dependencies": {
@@ -27,6 +29,7 @@
     "dotenv": "^16.3.1",
     "lodash": "^4.17.21",
     "moment-timezone": "^0.5.45",
+    "node-schedule": "^2.1.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "uuid": "^10.0.0",
@@ -42,6 +45,7 @@
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
+    "@types/node-schedule": "^2.1.7",
     "@types/supertest": "^6.0.0",
     "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^6.0.0",

@@ -10,6 +10,6 @@ import { Injectable, Scope } from '@nestjs/common';
 @Injectable({ scope: Scope.DEFAULT })
 export class SelicMonthSgsService extends BaseAssetSgsService<SelicData> {
     constructor() {
-        super(DataSource.SelicDaySgs, AssetType.Selic, DataGranularity.Month, '4390');
+        super(DataSource.SelicMonthSgs, AssetType.Selic, DataGranularity.Month, '4390');
     }
 }

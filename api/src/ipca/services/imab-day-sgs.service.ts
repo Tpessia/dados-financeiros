@@ -10,6 +10,6 @@ import { Injectable, Scope } from '@nestjs/common';
 @Injectable({ scope: Scope.DEFAULT })
 export class ImabDaySgsService extends BaseAssetSgsService<IpcaData> {
     constructor() {
-        super(DataSource.SelicDaySgs, AssetType.IMAB, DataGranularity.Day, '12466');
+        super(DataSource.ImabDaySgs, AssetType.IMAB, DataGranularity.Day, '12466');
     }
 }
