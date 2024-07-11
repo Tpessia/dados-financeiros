@@ -25,7 +25,7 @@ export function sortByNumber<T>(array: T[], selector: (e: T) => any = e => e) {
     return array.sort((a, b) => (selector(a) || 0) - (selector(b) || 0));
 }
 
-export function numDictToArray<T>(dict: {[key:number]: T}) {
+export function numDictToArray<T>(dict: {[key: number]: T}) {
     return (Object.entries(dict) as any as [number, T][]).reduce((acc, val) => {
         acc[val[0]] = val[1];
         return acc;

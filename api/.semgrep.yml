@@ -1,6 +1,8 @@
 rules:
   - id: hardcoded-api-key
-    pattern-regex: '(?i)\b(api[\._-]?)?(key|token|secret|password|pass|passwd|pswd|auth|credentials)[=\s][0-9a-zA-Z+/=]{6,64}\b'
+    pattern-either:
+      - pattern-regex: '(?i)\b(api[\._-]?)?(key|token|secret|password|pass|passwd|pswd|auth|credentials)[=:][0-9a-zA-Z+/=]{6,64}\b'
+      - pattern-regex: '(?i)\b[0-9a-zA-Z]{30,}\b'
     message: "Potential API key or token detected"
     languages: [generic]
     severity: ERROR

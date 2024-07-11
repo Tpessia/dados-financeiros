@@ -25,13 +25,17 @@ export class SchedulerService {
     constructor(private moduleRef: ModuleRef) {}
 
     async run(...services: DataSource[]) {
-        if (!services?.length) services = Object.keys(this.services) as DataSource[];
-        this.logger.log(`Running jobs: ${services.join(', ')}`);
-        const funcs = Object.entries(this.services)
-            .filter(job => services.includes(job[0] as DataSource))
-            .map(job => () => this.runService(job[1]));
-        await promiseParallelAll(funcs, 2);
-        this.logger.log(`Finished jobs (${funcs.length})`);
+        try {
+            if (!services?.length) services = Object.keys(this.services) as DataSource[];
+            this.logger.log(`Running jobs: ${services.join(', ')}`);
+            const funcs = Object.entries(this.services)
+                .filter(job => services.includes(job[0] as DataSource))
+                .map(job => () => this.runService(job[1]));
+            await promiseParallelAll(funcs, 2);
+            this.logger.log(`Finished jobs (${funcs.length})`);
+        } catch (err) {
+            this.logger.error(err.toString(), err.stack);
+        }
     }
 
     async start() {

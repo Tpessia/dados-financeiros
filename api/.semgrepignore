@@ -9,6 +9,7 @@ vendor/
 *.min.js
 .npm/
 .yarn/
+package-lock.json
 
 # Common test paths
 test/

@@ -1,9 +1,16 @@
-# Centralizador de Dados Financeiros
+# Financial Data API
 
-Esta aplicação é uma API que centraliza dados financeiros, com foco nos dados disponíveis no [repositório dados-financeiros](https://github.com/Tpessia/dados-financeiros).
+API that centralizes financial data, focusing on the data available in the [financial data repository](https://github.com/Tpessia/dados-financeiros).
 
-## Funcionalidades
+## Features
 
-- Busca de dados financeiros por códigos de ativos.
-- Suporte para diferentes tipos de ativos, incluindo taxas de juros, índices de inflação, ações e moedas.
-- Conversão e alavancagem de dados conforme especificado nos códigos dos ativos.
+- Financial data search by asset codes.
+- Support for different types of assets, including interest rates, inflation indices, stocks, and currencies.
+- Data conversion and leveraging as specified in the asset codes.
+
+## Docker
+
+```
+npm run docker:build
+npm run docker:run
+```
