@@ -18,7 +18,7 @@ RUN npm run build
 
 FROM node:20.12.2-bullseye AS run
 
-ARG ENV=local
+ARG ENV=dev
 ENV NODE_ENV=${ENV}
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}

@@ -47,7 +47,8 @@ export class SchedulerService {
         });
 
         setTimeout(async () => {
-            const preLoad = ['prod','local'].includes(process.env.NODE_ENV);
+            const envs: typeof process.env.NODE_ENV[] = ['prod', 'dev'];
+            const preLoad = envs.includes(process.env.NODE_ENV);
             if (preLoad) await this.run();
         }, 5000);
     }

@@ -17,6 +17,7 @@ jobs:
       - name: Test
         shell: bash
         run: |
+          cd api
           npm install
           npm run build
           npm run test

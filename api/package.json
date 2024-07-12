@@ -4,14 +4,14 @@
   "private": true,
   "scripts": {
     "init": "npm i -g @nestjs/cli@10.3.2 && npm install",
-    "start": "cross-env NODE_ENV=local nest start --watch",
+    "start": "cross-env NODE_ENV=dev nest start --watch",
     "start:prod": "node dist/main",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "docker:build": "sudo docker build -t dados-financeiros -f Dockerfile --build-arg ENV=local .",
+    "docker:build": "sudo docker build -t dados-financeiros -f Dockerfile .",
     "docker:run": "sudo docker run -it -p 3000:3000 --name dados-financeiros dados-financeiros:latest",
     "docker:sast": "sudo docker run --rm -v \"${PWD}:/src\" returntocorp/semgrep semgrep --metrics=off --no-git-ignore --config \"/src/.semgrep.yml\" --config \"p/secrets\" --config \"p/gitleaks\" --config \"p/owasp-top-ten\" --config \"p/cwe-top-25\" --config \"p/ci\" --config \"p/security-audit\" --config \"p/javascript\" --config \"p/typescript\" --config \"p/docker\" --config \"p/nodejs\" /src # --verbose"
   },
