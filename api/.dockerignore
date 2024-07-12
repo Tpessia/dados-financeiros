@@ -1,0 +1,16 @@
+# Node.js .dockerignore
+
+**/dist
+**/logs
+**/*.log
+**/node_modules/
+**/npm-debug.log
+**/.git
+**/.vscode
+**/.gitignore
+**/.dockerignore
+**/README.md
+**/LICENSE
+**/.editorconfig
+**/Dockerfile
+**/docker-compose.yml
