@@ -61,11 +61,15 @@ async function bootstrap() {
     .build();
 
   const swaggerExpressOpts: SwaggerCustomOptions = {
-    customCss: 'https://raw.githubusercontent.com/Amoenus/SwaggerDark/master/SwaggerDark.css',
+    customSiteTitle: 'Dados Financeiros',
+    customCssUrl: '/api/SwaggerDark.css',
     swaggerOptions: { // https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
       displayRequestDuration: true,
     }
   };
+
+  if (process.env.NODE_ENV === 'prod')
+    swaggerExpressOpts.customfavIcon = '/logo/logo.svg';
 
   const document = SwaggerModule.createDocument(app, swaggerOpts);
   SwaggerModule.setup('/api', app, document, swaggerExpressOpts);
