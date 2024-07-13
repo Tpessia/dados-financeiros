@@ -54,6 +54,7 @@ export function convertCurrency<T extends AssetData>(data: T[], currency: AssetD
   for (const assetData of data) {
     const currencyData = currency.find(c => dateToIsoStr(assetData.date) === dateToIsoStr(c.date));
     if (currencyData) lastCurrency = currencyData;
+    if (!lastCurrency) continue;
 
     const data: AssetData = {
       assetCode: assetData.assetCode,
