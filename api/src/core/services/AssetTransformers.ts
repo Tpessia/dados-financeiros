@@ -51,9 +51,12 @@ export function convertCurrency<T extends AssetData>(data: T[], currency: AssetD
   const convertedData: T[] = [];
   let lastCurrency: AssetData;
 
+  const currencyMap = new Map(currency.map(c => [dateToIsoStr(c.date), c]));
+
   for (const assetData of data) {
-    const currencyData = currency.find(c => dateToIsoStr(assetData.date) === dateToIsoStr(c.date));
+    const currencyData = currencyMap.get(dateToIsoStr(assetData.date));
     if (currencyData) lastCurrency = currencyData;
+
     if (!lastCurrency) continue;
 
     const data: AssetData = {

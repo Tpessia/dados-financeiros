@@ -13,7 +13,7 @@ import { SelicDaySgsService } from '@/selic/services/selic-day-sgs.service';
 import { StockYahooService } from '@/stock/services/stock-yahoo.service';
 import { Injectable, Scope, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { groupBy, sortBy } from 'lodash';
+import { groupBy, sortBy, uniq } from 'lodash';
 
 interface AssetRule {
     name: string;
@@ -84,7 +84,8 @@ export class SearchService {
         minDate.setHours(0, 0, 0, 0);
         maxDate.setHours(23, 59, 59, 999);
 
-        const assets = assetCodes.split(',').map(a => ({ assetCode: a, rule: this.getAssetRule(a) }));
+        const assets = uniq(assetCodes.split(',')).map(a => ({ assetCode: a, rule: this.getAssetRule(a) }));
+        if (assets.length > 10) throw new Error('Too many assets (max = 10)');
         const assetsByType = groupBy(assets, a => a.rule.name);
 
         const tasks: (() => Promise<AssetHistData<AssetData>>)[] = Object.values(assetsByType).flatMap((assetRule) => {
