@@ -94,8 +94,17 @@ export async function promiseRetry<T>(func: () => Promise<T>, maxRetries: number
     }
 }
 
-function isPromise<T>(value: T | Promise<T>): value is Promise<T> {
+export type TypedFunction<T = any> = (...args: any[]) => any | Promise<T>;
+export type TypedFunctionWrapper<T extends TypedFunction> = ((...args: Parameters<T>) => ReturnType<T>);
+export type TypedSyncFunction<T = any> = (...args: any[]) => T;
+export type TypedAsyncFunction<T = any> = (...args: any[]) => Promise<T>;
+
+export function isPromise<T>(value: T | Promise<T>): value is Promise<T> {
     return value instanceof Promise;
+}
+
+export function isAsyncFunction(func: TypedFunction): func is TypedAsyncFunction {
+    return func.constructor.name == 'AsyncFunction';
 }
 
 // Receives a value that could be already resolved or yet a Promise,
@@ -103,8 +112,8 @@ function isPromise<T>(value: T | Promise<T>): value is Promise<T> {
 // returning the resolved result or a new promise
 // export function runOrResolve<T, U>(value: T, func: (resolved: T) => U): U;
 // export function runOrResolve<T, U>(value: Promise<T>, func: (resolved: T) => U): Promise<U>;
-export function runOrResolve<T, U>(value: T | Promise<T>, callback: (resolved: T) => U): U | Promise<U> {
+export function runOrResolve<T, U>(value: T | Promise<T>, callback: (resolved: T) => U, errCallback?: (rejected: any) => any): U | Promise<U> {
     return isPromise(value)
-        ? value.then(resolved => callback(resolved as T)) 
+        ? value.then(callback).catch(err => errCallback?.(err) ?? (err => { throw err; })(err))
         : callback(value as T);
 }

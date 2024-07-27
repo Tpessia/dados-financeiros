@@ -128,7 +128,7 @@ export class GovBondDayTransparenteService extends BaseAssetService {
         const file = await promiseRetry(
             () => HttpService.get(this.csvUrl, { responseType: 'arraybuffer' }).then(r => Buffer.from(r.data, 'binary')),
             3,
-            err => this.logger.log(`Retry Error: ${err}`)
+            err => this.logger.warn(`Retry Error: ${err}`)
         );
 
         const assetsData: GovBondDayTransparenteDto = {};

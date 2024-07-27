@@ -1,4 +1,4 @@
-import { dateTimeToIsoStr, promiseParallelAll } from '@/@utils';
+import { dateTimeToIsoStr, promiseParallel } from '@/@utils';
 import { DataSource } from '@/core/enums/DataSource';
 import { BaseAssetService } from '@/core/services/BaseAssetService';
 import { GovBondDayTransparenteService } from '@/gov-bond/services/gov-bond-day-transparente.service';
@@ -31,10 +31,10 @@ export class SchedulerService {
             const funcs = Object.entries(this.services)
                 .filter(job => services.includes(job[0] as DataSource))
                 .map(job => () => this.runService(job[1]));
-            await promiseParallelAll(funcs, 2);
+            await promiseParallel(funcs, 2);
             this.logger.log(`Finished jobs (${funcs.length})`);
         } catch (err) {
-            this.logger.error(err.toString(), err.stack);
+            this.logger.error('Jobs failed');
         }
     }
 
@@ -59,6 +59,7 @@ export class SchedulerService {
             await service.getData({ minDate: new Date(0), maxDate: new Date(0) });
         } catch (err) {
             this.logger.error(`[${service.type}] ${err.toString()}`, err.stack);
+            throw err;
         }
     }
 }

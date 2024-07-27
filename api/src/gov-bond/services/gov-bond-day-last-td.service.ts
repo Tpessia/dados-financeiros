@@ -113,7 +113,7 @@ export class GovBondDayLastTdService extends BaseAssetService {
         const data = await promiseRetry(() =>
             HttpService.get<GovBondDayLastTdDto>(this.jsonUrl, { httpsAgent }).then(r => r.data),
             3,
-            err => this.logger.log(`Retry Error: ${err}`)
+            err => this.logger.warn(`Retry Error: ${err}`)
         );
 
         return data;

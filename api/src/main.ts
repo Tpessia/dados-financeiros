@@ -69,7 +69,7 @@ async function bootstrap() {
   };
 
   if (process.env.NODE_ENV === 'prod')
-    swaggerExpressOpts.customfavIcon = '/logo/logo.svg';
+    swaggerExpressOpts.customfavIcon = '/assets/logo/logo.svg';
 
   const document = SwaggerModule.createDocument(app, swaggerOpts);
   SwaggerModule.setup('/api', app, document, swaggerExpressOpts);

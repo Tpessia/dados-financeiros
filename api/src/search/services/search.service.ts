@@ -78,7 +78,10 @@ export class SearchService {
         },
     ];
 
-    constructor(private moduleRef: ModuleRef) {}
+    constructor(
+        private moduleRef: ModuleRef,
+        private stockYahooService: StockYahooService,
+    ) {}
 
     async getAssets(assetCodes: string, minDate: Date, maxDate: Date): Promise<AssetHistData<AssetData>[]> {
         minDate.setHours(0, 0, 0, 0);
@@ -87,6 +90,8 @@ export class SearchService {
         const assets = uniq(assetCodes.split(',')).map(a => ({ assetCode: a, rule: this.getAssetRule(a) }));
         if (assets.length > 10) throw new Error('Too many assets (max = 10)');
         const assetsByType = groupBy(assets, a => a.rule.name);
+
+        const currencyRequests = new Map<string, Promise<AssetData[]>>();
 
         const tasks: (() => Promise<AssetHistData<AssetData>>)[] = Object.values(assetsByType).flatMap((assetRule) => {
             const rule = assetRule[0].rule;
@@ -112,8 +117,14 @@ export class SearchService {
                 if (currency != null) {
                     const assetCurrency = data.data[0]?.currency;
                     if (assetCurrency != null && assetCurrency !== currency) {
-                        const forexService: StockYahooService = await this.moduleRef.resolve(StockYahooService, undefined, { strict: false });
-                        const currencyData = await forexService.getData({ assetCode: `${assetCurrency}${currency}=X`, minDate, maxDate }).then(e => e.data);
+                        const currencyPair = `${assetCurrency}${currency}=X`;
+
+                        if (!currencyRequests.has(currencyPair)) {
+                            const currencyData = this.stockYahooService.getData({ assetCode: currencyPair, minDate, maxDate }).then(e => e.data);
+                            currencyRequests.set(currencyPair, currencyData);
+                        }
+
+                        const currencyData = await currencyRequests.get(currencyPair);
                         data.data = convertCurrency(data.data, currencyData);
                         data.data.forEach(e => e.assetCode = `${code}:${currency}`);
                     } else {

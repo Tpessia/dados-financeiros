@@ -70,7 +70,7 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
         let data = await promiseRetry(
             () => HttpService.get(this.jsonUrl, { responseType: 'text' }).then(r => r.data),
             3,
-            err => this.logger.log(`Retry Error: ${err}`)
+            err => this.logger.warn(`Retry Error: ${err}`)
         );
 
         data = tryParseJson<AssetSgsDto[]>(data, undefined, false);

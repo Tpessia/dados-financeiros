@@ -139,7 +139,7 @@ export class GovBondDaySiswebService extends BaseAssetService {
                     const file = await promiseRetry(
                         () => HttpService.get(e.asset.url!, { responseType: 'arraybuffer' }).then(r => Buffer.from(r.data, 'binary')),
                         3,
-                        err => this.logger.log(`Retry Error: ${err}`)
+                        err => this.logger.warn(`Retry Error: ${err}`)
                     );
 
                     assetsData.push({
@@ -178,13 +178,13 @@ export class GovBondDaySiswebService extends BaseAssetService {
                 validateStatus: status => status >= 200 && status < 303,
             }).then(r => r.headers["set-cookie"]),
             3,
-            err => this.logger.log(`Retry Error: ${err}`)
+            err => this.logger.warn(`Retry Error: ${err}`)
         );
 
         html = await promiseRetry(
             () => HttpService.get(this.indexUrl, { headers: { 'Cookie': cookie[0] } }).then(r => r.data),
             3,
-            err => this.logger.log(`Retry Error: ${err}`)
+            err => this.logger.warn(`Retry Error: ${err}`)
         );
         
         const htmlMain = html.match(/<div class="bl-body">[\s\S]*?<\/div>/)?.[0];

@@ -68,7 +68,7 @@ export class IpcaMonthIpeaService extends BaseAssetService {
         const data = await promiseRetry(
             () => HttpService.get<{ value: IpcaMonthIpeaDto[] }>(this.jsonUrl).then(r => r.data?.value),
             3,
-            err => this.logger.log(`Retry Error: ${err}`)
+            err => this.logger.warn(`Retry Error: ${err}`)
         );
 
         return data;
