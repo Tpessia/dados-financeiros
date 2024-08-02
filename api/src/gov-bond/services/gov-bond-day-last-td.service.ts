@@ -2,8 +2,8 @@ import { castPercent, extractIsoDateParts, isValidDate, parseDate, parseMoment, 
 import { DataSource } from '@/core/enums/DataSource';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
-import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { DataGranularity } from '@/core/models/DataGranularity';
+import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { HttpService } from '@/core/services/http.service';
 import { GovBondDayLastTdDto } from '@/gov-bond/dtos/GovBondDayLastTdDto';
 import { GovBondData, GovBondType } from '@/gov-bond/models/GovBondData';
@@ -21,9 +21,11 @@ export class GovBondDayLastTdService extends BaseAssetService {
         super(DataSource.GovBondDayLastTd);
     }
 
-    async getData({ assetCode }: GetDataParams): Promise<AssetHistData<GovBondData>> {
+    async getData(params: GetDataParams): Promise<AssetHistData<GovBondData>> {
+        // this.validateParams(params, ['assetCode']);
+
         const assetData: AssetHistData<GovBondData> = {
-            key: assetCode ?? AssetType.GovBond,
+            key: params.assetCode ?? AssetType.GovBond,
             type: AssetType.GovBond,
             granularity: DataGranularity.Day,
             metadata: { errors: [] },
@@ -101,6 +103,7 @@ export class GovBondDayLastTdService extends BaseAssetService {
             });
         }
 
+        assetData.data = params.assetCode != null ? assetData.data.filter(e => e.assetCode === params.assetCode) : assetData.data;
         assetData.data = sortBy(assetData.data, e => e.date);
 
         return assetData;

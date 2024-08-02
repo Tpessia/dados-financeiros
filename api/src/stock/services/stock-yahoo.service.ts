@@ -117,7 +117,8 @@ export class StockYahooService extends BaseAssetService {
             includeAdjustedClose: true,
         };
 
-        const data = await HttpService.get<StocksYahooDto>(`${this.jsonUrl}/${ticker}`, { params }).then(r => r.data);
+        const data = await HttpService.get<StocksYahooDto>(`${this.jsonUrl}/${ticker}`, { params }).then(r => r.data)
+            .catch(err => { throw new Error(`Yahoo Error: ${err?.response ?`${err?.response?.status} ${err?.response?.statusText}` : (err?.message ?? err?.toString())}`); });
 
         return data;
     }

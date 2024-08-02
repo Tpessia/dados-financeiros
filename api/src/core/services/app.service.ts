@@ -17,6 +17,10 @@ export class AppService {
 
     private static info: string[] = [];
 
+    static config = {
+        cacheTime: 15,
+    };
+
     static async init() {
         this.addInfo(`
             appId: ${this.appId}

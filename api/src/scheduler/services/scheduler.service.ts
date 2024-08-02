@@ -1,5 +1,6 @@
 import { dateTimeToIsoStr, promiseParallel } from '@/@utils';
 import { DataSource } from '@/core/enums/DataSource';
+import { AppService } from '@/core/services/app.service';
 import { BaseAssetService } from '@/core/services/BaseAssetService';
 import { GovBondDayTransparenteService } from '@/gov-bond/services/gov-bond-day-transparente.service';
 import { ImabDaySgsService } from '@/ipca/services/imab-day-sgs.service';
@@ -7,7 +8,7 @@ import { IpcaDaySgsService } from '@/ipca/services/ipca-day-sgs.service';
 import { SelicDaySgsService } from '@/selic/services/selic-day-sgs.service';
 import { Injectable, Logger, Scope, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import * as schedule from 'node-schedule';
+import { scheduleJob } from 'node-schedule';
 
 // TODO: run on new worker / thread
 // BondsDayTransparenteService takes 2 min on "Saving on repository"
@@ -31,7 +32,7 @@ export class SchedulerService {
             const funcs = Object.entries(this.services)
                 .filter(job => services.includes(job[0] as DataSource))
                 .map(job => () => this.runService(job[1]));
-            await promiseParallel(funcs, 2);
+                await promiseParallel(funcs, 2, true);
             this.logger.log(`Finished jobs (${funcs.length})`);
         } catch (err) {
             this.logger.error('Jobs failed');
@@ -40,7 +41,7 @@ export class SchedulerService {
 
     async start() {
         // At noon (cacheKey reset)
-        const job1 = schedule.scheduleJob({ tz: 'America/Sao_Paulo', rule: '0 0 12 * * *' }, async () => {
+        const job1 = scheduleJob({ rule: `0 0 ${AppService.config.cacheTime} * * *`, tz: 'Etc/UTC' }, async () => {
             this.logger.log(`<JOB1> ${dateTimeToIsoStr(new Date())}`);
             await this.run();
             this.logger.log(`<\\JOB1> ${dateTimeToIsoStr(new Date())}`);

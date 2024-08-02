@@ -1,18 +1,19 @@
-// Similar to Promise.all, but parallel
-export function promiseParallel<T>(tasks: (() => Promise<T>)[], concurrencyLimit: number): Promise<T[]> {
-    return new Promise<T[]>((res, rej) => {
+export function promiseParallel<T, TRej = T>(tasks: (() => Promise<T>)[], concurrencyLimit: number, noReject: boolean = false): Promise<(T | TRej)[]> {
+    return new Promise<(T | TRej)[]>((res, rej) => {
         if (tasks.length === 0) res([]);
 
-        const results: T[] = [];
-        const pool: Promise<T>[] = [];
+        const results: (T | TRej)[] = [];
+        const pool: Promise<T | TRej>[] = [];
         let canceled: boolean = false;
 
         tasks.slice(0, concurrencyLimit).map(e => runPromise(e));
 
-        function runPromise(task: () => Promise<T>): Promise<T> {
-            const promise = task();
+        function runPromise(task: () => Promise<T>): Promise<T | TRej> {
+            let promise: Promise<T | TRej> = task();
 
             pool.push(promise);
+
+            if (noReject) promise = promise.catch((e: TRej) => e);
 
             promise.then(r => {
                 if (canceled) return;
@@ -31,51 +32,9 @@ export function promiseParallel<T>(tasks: (() => Promise<T>)[], concurrencyLimit
                 if (!nextTask) return;
 
                 runPromise(nextTask);
-            }).catch(err => {
-                canceled = true;
-                rej(err);
-            });
-
-            return promise;
-        }
-    });
-}
-
-// Similar to Promise.all, but parallel and without rejection
-export function promiseParallelAll<T, TRej = Error>(tasks: (() => Promise<T>)[], concurrencyLimit: number): Promise<(T | TRej)[]> {
-    return new Promise<(T | TRej)[]>((res, rej) => {
-        if (tasks.length === 0) res([]);
-
-        const results: (T | TRej)[] = [];
-        const pool: Promise<T>[] = [];
-        let canceled: boolean = false;
-
-        tasks.slice(0, concurrencyLimit).map(e => runPromise(e));
-
-        function runPromise(task: () => Promise<T>): Promise<T> {
-            const promise = task();
-
-            pool.push(promise);
-
-            promise.catch((e: TRej) => e)
-            .then(r => {
-                if (canceled) return;
-
-                results.push(r);
-
-                const poolIndex = pool.indexOf(promise);
-                pool.splice(poolIndex, 1);
-
-                if (tasks.length === results.length)
-                    res(results);
-
-                const nextIndex = concurrencyLimit + results.length - 1;
-                const nextTask = tasks[nextIndex];
-
-                if (!nextTask) return;
-
-                runPromise(nextTask);
-            });
+            })
+            
+            if (!noReject) promise.catch(err => { canceled = true; rej(err); });
 
             return promise;
         }

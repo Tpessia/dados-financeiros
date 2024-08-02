@@ -130,5 +130,8 @@ export function applyLeverage(data: AssetData[], leverage: number): AssetData[] 
 }
 
 export function cleanUpData(data: AssetData[]): AssetData[] {
-  return data.map(e => ({ ...e, value: e.value > 1 ? round(e.value, 2) : e.value }));
+  for (let item of data) {
+    if (item.value > 1) item.value = round(item.value, 2);
+  }
+  return data;
 }

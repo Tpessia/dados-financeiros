@@ -5,6 +5,7 @@ import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetSgsDto } from '@/core/models/AssetSgsDto';
 import { AssetType } from '@/core/models/AssetType';
 import { DataGranularity } from '@/core/models/DataGranularity';
+import { AppService } from '@/core/services/app.service';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { HttpService } from '@/core/services/http.service';
 import { sortBy } from 'lodash';
@@ -14,7 +15,7 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
     protected granularity: DataGranularity;
     protected jsonUrl: string;
 
-    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -12));
+    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -AppService.config.cacheTime));
 
     constructor(type: DataSource, assetType: AssetType, granularity: DataGranularity, code: string) {
         super(type);
@@ -40,16 +41,9 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
 
         const dto = await this.getDto();
 
-        // Map
+        assetData.data = dto;
 
-        for (let data of dto) {
-            const date = parseMoment(data.data, 'DD/MM/YYYY');
-            const value = castPercent(+data.valor);
-
-            const parsed = { assetCode: params.assetCode ?? this.assetType, date: date.toDate(), value, currency: 'BRL' } as T;
-
-            assetData.data.push(parsed);
-        }
+        assetData.data.forEach(e => e.assetCode = params.assetCode ?? e.assetCode);
 
         assetData.data = assetData.data.filter(e => e.date >= params.minDate);
         assetData.data = assetData.data.filter(e => params.maxDate >= e.date);
@@ -64,17 +58,29 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
         itemKey: (config, args, cache) => BaseAssetSgsService.cacheKey(),
         onCall: (config, args, cache) => cache.invalidate(e => e !== BaseAssetSgsService.cacheKey())
     })
-    async getDto(): Promise<AssetSgsDto[]> {
+    async getDto(): Promise<T[]> {
         this.logger.log(`--- Fetching data for ${BaseAssetSgsService.cacheKey()} ---`);
 
-        let data = await promiseRetry(
-            () => HttpService.get(this.jsonUrl, { responseType: 'text' }).then(r => r.data),
-            3,
+        let dto = await promiseRetry(
+            () => HttpService.get(this.jsonUrl, { responseType: 'text' }).then(r => JSON.parse(r.data) as AssetSgsDto[]),
+            5,
             err => this.logger.warn(`Retry Error: ${err}`)
         );
 
-        data = tryParseJson<AssetSgsDto[]>(data, undefined, false);
-        if (!data) throw new Error(`[${this.assetType}] Invalid data from ${this.jsonUrl}`);
+        if (!dto) throw new Error(`[${this.assetType}] Invalid data from ${this.jsonUrl}`);
+
+        // Map
+
+        const data: T[] = [];
+
+        for (let item of dto) {
+            const date = parseMoment(item.data, 'DD/MM/YYYY');
+            const value = castPercent(+item.valor);
+
+            const parsed = { assetCode: this.assetType, date: date.toDate(), value, currency: 'BRL' } as T;
+
+            data.push(parsed);
+        }
 
         return data;
     }

@@ -2,8 +2,9 @@ import { Memoize, MemoizeCacheType, addDate, arrayDistinct, castPercent, dateToI
 import { DataSource } from '@/core/enums/DataSource';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
-import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { DataGranularity } from '@/core/models/DataGranularity';
+import { AppService } from '@/core/services/app.service';
+import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { HttpService } from '@/core/services/http.service';
 import { GovBondDayTransparenteDto } from '@/gov-bond/dtos/GovBondDayTransparenteDto';
 import { GovBondData, GovBondType } from '@/gov-bond/models/GovBondData';
@@ -17,7 +18,7 @@ import * as xlsx from 'xlsx';
 export class GovBondDayTransparenteService extends BaseAssetService {
     private csvUrl = 'https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv';
 
-    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -12));
+    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -AppService.config.cacheTime));
 
     constructor() {
         super(DataSource.GovBondDayTransparente);
@@ -41,75 +42,11 @@ export class GovBondDayTransparenteService extends BaseAssetService {
 
         const dto = await this.getDto();
 
-        // Map
-
-        const header = ['assetType','maturityDate','date','buyRate','sellRate','buyPu','sellPu','basePu'];
-        assetData.data = parseHeaderMatrix<GovBondData>(header, dto.rawJson!);
+        assetData.data = dto.assetData;
+        assetData.metadata = dto.metadata;
 
         assetData.data = assetData.data.filter(e => e.date >= params.minDate);
         assetData.data = assetData.data.filter(e => params.maxDate >= e.date);
-
-        assetData.metadata.assetTypes = arrayDistinct(assetData.data.map(e => e.assetType));
-
-        const assetTypeMap: Record<GovBondType, string[]> = {
-            'LFT': ['Tesouro Selic'], // Selic
-            'LTN': ['Tesouro Prefixado'], // Pre
-            'NTN-F': ['Tesouro Prefixado com Juros Semestrais'], // Pre Juros
-            'NTN-B-P': ['Tesouro IPCA+'], // IPCA
-            'NTN-B': ['Tesouro IPCA+ com Juros Semestrais'], // IPCA Juros
-            'NTN-C': ['Tesouro IGPM+ com Juros Semestrais'], // IGP-M
-            'NTN-R': ['Tesouro Renda+ Aposentadoria Extra'], // Renda+
-            'NTN-E': ['Tesouro Educa+'], // Educa+
-        };
-
-        for (let i = 0; i < assetData.data.length; i++) {
-            const data = assetData.data[i];
-
-            // Validate
-
-            const isValid = isValidDate(data.date) && isValidDate(data.maturityDate)
-                && data.buyRate != null && !isNaN(data.buyRate)
-                && data.sellRate != null && !isNaN(data.sellRate)
-                && data.buyPu != null && !isNaN(data.buyPu)
-                && data.sellPu != null && !isNaN(data.sellPu);
-
-            if (!isValid) {
-                assetData.metadata.errors.push({
-                    date: data.date,
-                    message: 'Invalid Data',
-                    data: JSON.stringify(data)
-                });
-                continue;
-            }
-
-            // Map
-
-            const mappedType = Object.entries(assetTypeMap).find(gk => gk[1].some(k => k === data.assetType))?.[0] as GovBondType;
-
-            if (!mappedType) {
-                assetData.metadata.errors.push({
-                    date: data.date,
-                    message: 'GovBond type not found',
-                    data: JSON.stringify(data),
-                });
-                continue;
-            }
-
-            data.assetType = mappedType;
-
-            data.buyRate = castPercent(data.buyRate);
-            data.sellRate = castPercent(data.sellRate);
-
-            const date = parseMoment(data.date);
-            data.date = date.toDate();
-            data.maturityDate = new Date(data.maturityDate);
-
-            const year = extractIsoDateParts(data.maturityDate)[0];
-            data.assetCode = `${mappedType}/${year}`;
-
-            data.value = data.buyPu;
-            data.currency = 'BRL';
-        }
 
         assetData.data = params.assetCode != null ? assetData.data.filter(e => e.assetCode === params.assetCode) : assetData.data;
         assetData.data = sortBy(assetData.data, e => e.date);
@@ -122,7 +59,7 @@ export class GovBondDayTransparenteService extends BaseAssetService {
         itemKey: (config, args, cache) => GovBondDayTransparenteService.cacheKey(),
         onCall: (config, args, cache) => cache.invalidate(e => e !== GovBondDayTransparenteService.cacheKey())
     })
-    async getDto(): Promise<GovBondDayTransparenteDto> {
+    async getDto(): Promise<{ assetData: GovBondData[], metadata: any }> {
         this.logger.log(`--- Fetching data for ${GovBondDayTransparenteService.cacheKey()} ---`);
 
         const file = await promiseRetry(
@@ -131,11 +68,11 @@ export class GovBondDayTransparenteService extends BaseAssetService {
             err => this.logger.warn(`Retry Error: ${err}`)
         );
 
-        const assetsData: GovBondDayTransparenteDto = {};
-        // assetsData.file = file;
-        assetsData.workBook = xlsx.read(file, { type: 'buffer', raw: true }); // cellDates: false
-        assetsData.workSheets = Object.entries(assetsData.workBook.Sheets);
-        const workSheet = assetsData.workSheets[0][1];
+        const assetDto: GovBondDayTransparenteDto = {};
+        // assetsDto.file = file;
+        assetDto.workBook = xlsx.read(file, { type: 'buffer', raw: true }); // cellDates: false
+        assetDto.workSheets = Object.entries(assetDto.workBook.Sheets);
+        const workSheet = assetDto.workSheets[0][1];
 
         for (let cellId of Object.keys(workSheet)) { // https://www.npmjs.com/package/xlsx -> Cell Object
             if (cellId === '!ref') continue;
@@ -162,8 +99,76 @@ export class GovBondDayTransparenteService extends BaseAssetService {
             // }
         }
 
-        assetsData.rawJson = xlsx.utils.sheet_to_json(workSheet).map((e: any) => Object.values(e));
+        assetDto.rawJson = xlsx.utils.sheet_to_json(workSheet).map((e: any) => Object.values(e));
 
-        return assetsData;
+        // Map
+
+        const header = ['assetType','maturityDate','date','buyRate','sellRate','buyPu','sellPu','basePu'];
+        let assetData = parseHeaderMatrix<GovBondData>(header, assetDto.rawJson!);
+        let metadata = { assetTypes: [], errors: [] };
+
+        metadata.assetTypes = arrayDistinct(assetData.map(e => e.assetType));
+
+        const assetTypeMap: Record<GovBondType, string[]> = {
+            'LFT': ['Tesouro Selic'], // Selic
+            'LTN': ['Tesouro Prefixado'], // Pre
+            'NTN-F': ['Tesouro Prefixado com Juros Semestrais'], // Pre Juros
+            'NTN-B-P': ['Tesouro IPCA+'], // IPCA
+            'NTN-B': ['Tesouro IPCA+ com Juros Semestrais'], // IPCA Juros
+            'NTN-C': ['Tesouro IGPM+ com Juros Semestrais'], // IGP-M
+            'NTN-R': ['Tesouro Renda+ Aposentadoria Extra'], // Renda+
+            'NTN-E': ['Tesouro Educa+'], // Educa+
+        };
+
+        for (let i = 0; i < assetData.length; i++) {
+            const data = assetData[i];
+
+            // Validate
+
+            const isValid = isValidDate(data.date) && isValidDate(data.maturityDate)
+                && data.buyRate != null && !isNaN(data.buyRate)
+                && data.sellRate != null && !isNaN(data.sellRate)
+                && data.buyPu != null && !isNaN(data.buyPu)
+                && data.sellPu != null && !isNaN(data.sellPu);
+
+            if (!isValid) {
+                metadata.errors.push({
+                    date: data.date,
+                    message: 'Invalid Data',
+                    data: JSON.stringify(data)
+                });
+                continue;
+            }
+
+            // Map
+
+            const mappedType = Object.entries(assetTypeMap).find(gk => gk[1].some(k => k === data.assetType))?.[0] as GovBondType;
+
+            if (!mappedType) {
+                metadata.errors.push({
+                    date: data.date,
+                    message: 'GovBond type not found',
+                    data: JSON.stringify(data),
+                });
+                continue;
+            }
+
+            data.assetType = mappedType;
+
+            const year = extractIsoDateParts(data.maturityDate)[0];
+            data.assetCode = `${mappedType}/${year}`;
+
+            data.buyRate = castPercent(data.buyRate);
+            data.sellRate = castPercent(data.sellRate);
+
+            const date = parseMoment(data.date);
+            data.date = date.toDate();
+            data.maturityDate = new Date(data.maturityDate);
+
+            data.value = data.buyPu;
+            data.currency = 'BRL';
+        }
+
+        return { assetData, metadata };
     }
 }

@@ -3,6 +3,7 @@ import { DataSource } from '@/core/enums/DataSource';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
 import { DataGranularity } from '@/core/models/DataGranularity';
+import { AppService } from '@/core/services/app.service';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { HttpService } from '@/core/services/http.service';
 import { IpcaMonthIpeaDto } from '@/ipca/dtos/IpcaMonthIpeaDto';
@@ -16,7 +17,7 @@ import { sortBy } from 'lodash';
 export class IpcaMonthIpeaService extends BaseAssetService {
     private jsonUrl = "http://ipeadata.gov.br/api/odata4/ValoresSerie(SERCODIGO='PAN12_IPCAG12')";
 
-    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -12));
+    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -AppService.config.cacheTime));
 
     constructor() {
         super(DataSource.IpcaMonthIpea);

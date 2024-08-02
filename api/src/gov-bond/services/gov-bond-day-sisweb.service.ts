@@ -117,6 +117,7 @@ export class GovBondDaySiswebService extends BaseAssetService {
             }
         }
 
+        assetData.data = params.assetCode != null ? assetData.data.filter(e => e.assetCode === params.assetCode) : assetData.data;
         assetData.data = sortBy(assetData.data, e => e.date);
 
         return assetData;

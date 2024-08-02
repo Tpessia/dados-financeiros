@@ -4,7 +4,7 @@ repository:
   default_branch: main
   name: dados-financeiros
   description: Repositório de Fontes de Dados Financeiros
-  topics: finance, stock-market, market-data, brasil, financial-data
+  topics: finance, stock-market, market-data, financial-data, brazil, brasil
   homepage: https://InvestTester.com/api
   private: false
   has_issues: true

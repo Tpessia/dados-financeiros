@@ -57,7 +57,7 @@ export class SearchService {
         {
             name: AssetType.GovBond,
             assetType: AssetType.GovBond,
-            checkType: (assetCode) => new RegExp(`^(${Object.values(GovBondType).join('|')})/\\d{4}\\.SA$`).test(assetCode), // LTN/2021.SA
+            checkType: (assetCode) => new RegExp(`^(${Object.values(GovBondType).join('|')})/\\d{4}\\.SA`).test(assetCode), // LTN/2021.SA
             service: GovBondDayTransparenteService,
             transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: assetCode.replace('.SA', ''), ...inputs }),
             transformData: (data, rate) => applyLeverage(data, rate),
