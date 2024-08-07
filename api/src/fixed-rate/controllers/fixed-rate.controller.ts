@@ -5,7 +5,7 @@ import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { FixedRateService } from '@/fixed-rate/services/fixed-rate.service';
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiDefaultResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiDefaultResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Fixed Rate')
 @Controller('fixed-rate')
@@ -14,6 +14,8 @@ export class FixedRateController {
         private fixedRateService: FixedRateService,
     ) {}
 
+    @ApiQuery({ name: 'minDate', example: '2020-01-01' })
+    @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
     @ApiOkResponse({ type: AssetHistData<AssetData> })
     @ApiDefaultResponse({ type: ErrorResponse })
     @Get()

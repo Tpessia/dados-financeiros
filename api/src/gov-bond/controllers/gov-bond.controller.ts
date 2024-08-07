@@ -7,7 +7,7 @@ import { GovBondDayLastTdService } from '@/gov-bond/services/gov-bond-day-last-t
 import { GovBondDaySiswebService } from '@/gov-bond/services/gov-bond-day-sisweb.service';
 import { GovBondDayTransparenteService } from '@/gov-bond/services/gov-bond-day-transparente.service';
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiDefaultResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiDefaultResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Tesouro Direto')
 @Controller('tesouro-direto')
@@ -18,6 +18,8 @@ export class GovBondController {
         private readonly govBondDayLastTdService: GovBondDayLastTdService,
     ) { }
 
+    @ApiQuery({ name: 'minDate', example: '2020-01-01' })
+    @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
     @ApiOkResponse({ type: AssetHistData<GovBondData> })
     @ApiDefaultResponse({ type: ErrorResponse })
     @Get('day/sisweb')
@@ -26,6 +28,8 @@ export class GovBondController {
         return data;
     }
 
+    @ApiQuery({ name: 'minDate', example: '2020-01-01' })
+    @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
     @ApiOkResponse({ type: AssetHistData<GovBondData> })
     @ApiDefaultResponse({ type: ErrorResponse })
     @Get('day/transparente')

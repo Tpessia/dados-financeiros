@@ -62,10 +62,11 @@ async function bootstrap() {
 
   const swaggerExpressOpts: SwaggerCustomOptions = {
     customSiteTitle: 'Dados Financeiros',
+    // customSwaggerUiPath: '/api/', // TODO: custom html
     customCssUrl: '/api/SwaggerDark.css',
     swaggerOptions: { // https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
       displayRequestDuration: true,
-    }
+    },
   };
 
   if (process.env.NODE_ENV === 'prod')

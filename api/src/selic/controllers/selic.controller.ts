@@ -6,7 +6,7 @@ import { SelicData } from '@/selic/models/SelicData';
 import { SelicDaySgsService } from '@/selic/services/selic-day-sgs.service';
 import { SelicMonthSgsService } from '@/selic/services/selic-month-sgs.service';
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiDefaultResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiDefaultResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Selic')
 @Controller('selic')
@@ -16,6 +16,8 @@ export class SelicController {
         private selicMonthSgsService: SelicMonthSgsService,
     ) {}
 
+    @ApiQuery({ name: 'minDate', example: '2020-01-01' })
+    @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
     @ApiOkResponse({ type: AssetHistData<SelicData> })
     @ApiDefaultResponse({ type: ErrorResponse })
     @Get('/day/sgs')
@@ -24,6 +26,8 @@ export class SelicController {
         return data;
     }
 
+    @ApiQuery({ name: 'minDate', example: '2020-01-01' })
+    @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
     @ApiOkResponse({ type: AssetHistData<SelicData> })
     @ApiDefaultResponse({ type: ErrorResponse })
     @Get('/month/sgs')

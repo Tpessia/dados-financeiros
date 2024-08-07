@@ -16,7 +16,7 @@ describe('SearchService', () => {
     service = moduleRef.get(SearchService);
     
     const selicService = moduleRef.get(SelicDaySgsService);
-    jest.spyOn(selicService, 'getDto').mockImplementation(async (...args) => [{ data: '01/01/2024', valor: '0.01' }]);
+    jest.spyOn(selicService, 'getDto').mockImplementation(async (...args) => [{ assetCode: 'SELIC.SA', date: new Date('2024-01-01'), value: 0.0001, currency: 'BRL' }]);
   });
 
   describe('search', () => {

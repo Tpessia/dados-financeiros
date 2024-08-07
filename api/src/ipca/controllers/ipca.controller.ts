@@ -6,7 +6,7 @@ import { IpcaData } from '@/ipca/models/IpcaData';
 import { IpcaMonthIpeaService } from '@/ipca/services/ipca-month-ipea.service';
 import { IpcaMonthSgsService } from '@/ipca/services/ipca-month-sgs.service';
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiDefaultResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiDefaultResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('IPCA')
 @Controller('ipca')
@@ -16,6 +16,8 @@ export class IpcaController {
         private ipcaMonthIpeaService: IpcaMonthIpeaService,
     ) {}
 
+    @ApiQuery({ name: 'minDate', example: '2020-01-01' })
+    @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
     @ApiOkResponse({ type: AssetHistData<IpcaData> })
     @ApiDefaultResponse({ type: ErrorResponse })
     @Get('/month/sgs')
@@ -24,6 +26,8 @@ export class IpcaController {
         return data;
     }
 
+    @ApiQuery({ name: 'minDate', example: '2020-01-01' })
+    @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
     @ApiOkResponse({ type: AssetHistData<IpcaData> })
     @ApiDefaultResponse({ type: ErrorResponse })
     @Get('/month/ipea')
