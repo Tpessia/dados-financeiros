@@ -2,7 +2,7 @@ import { promiseParallel } from '@/@utils';
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
-import { applyLeverage, assetfy, cleanUpData, convertCurrency, initValue } from '@/core/services/AssetTransformers';
+import { applyLeverage, assetfy, cleanUpData, convertCurrency, initAssetValue } from '@/core/services/AssetTransformers';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { FixedRateService } from '@/fixed-rate/services/fixed-rate.service';
 import { GovBondType } from '@/gov-bond/models/GovBondData';
@@ -38,14 +38,14 @@ export class SearchService {
             assetType: AssetType.Selic,
             checkType: (assetCode) => assetCode.startsWith('SELIC.SA'),
             service: SelicDaySgsService,
-            transformData: (data, rate) => applyLeverage(assetfy(data, initValue), rate),
+            transformData: (data, rate) => applyLeverage(assetfy(data, initAssetValue), rate),
         },
         {
             name: AssetType.IPCA,
             assetType: AssetType.IPCA,
             checkType: (assetCode) => assetCode.startsWith('IPCA.SA'),
             service: IpcaDaySgsService,
-            transformData: (data, rate) => applyLeverage(assetfy(data, initValue), rate),
+            transformData: (data, rate) => applyLeverage(assetfy(data, initAssetValue), rate),
         },
         {
             name: AssetType.IMAB,

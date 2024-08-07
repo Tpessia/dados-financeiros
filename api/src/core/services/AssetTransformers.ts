@@ -2,7 +2,7 @@ import { businessDaysInYear, businessDaysRange, dateToIsoStr, datesRange, getFir
 import { AssetData } from '@/core/models/AssetData';
 import { round } from 'lodash';
 
-export const initValue: number = 1000;
+export const initAssetValue: number = 100;
 
 export function dailyfyPercents(monthlyData: AssetData[], maxDate?: Date): AssetData[] {
   const dailyData: AssetData[] = [];
@@ -115,8 +115,8 @@ export function applyLeverage(data: AssetData[], leverage: number): AssetData[] 
     const leveragedDailyChange = dailyChange * leverage;
     let leveragedValue = currentValue + leveragedDailyChange;
 
-    // Handle negative value
-    if (leveragedValue < 0) leveragedValue = 0;
+    // TODO: Handle negative value
+    // if (leveragedValue < 0) leveragedValue = 0;
 
     leveragedData.push({
       ...rest,

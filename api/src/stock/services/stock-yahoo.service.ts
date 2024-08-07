@@ -46,12 +46,15 @@ export class StockYahooService extends BaseAssetService {
             const timestamp = stocksDto?.timestamp?.[i];
             const date = new Date(timestamp * 1000);
 
-            const volume = stocksDto?.indicators?.quote?.[0]?.volume?.[i];
-            const open = stocksDto?.indicators?.quote?.[0]?.open?.[i];
-            const high = stocksDto?.indicators?.quote?.[0]?.high?.[i];
-            const low = stocksDto?.indicators?.quote?.[0]?.low?.[i];
-            const close = stocksDto?.indicators?.quote?.[0]?.close?.[i];
-            const adjClose = stocksDto?.indicators?.adjclose?.[0]?.adjclose?.[i];
+            const quote = stocksDto?.indicators?.quote?.[0];
+            const adj = stocksDto?.indicators?.adjclose?.[0];
+
+            const volume = quote?.volume?.[i];
+            const open = quote?.open?.[i];
+            const high = quote?.high?.[i];
+            const low = quote?.low?.[i];
+            const close = quote?.close?.[i];
+            const adjClose = adj?.adjclose?.[i];
             const currency = stocksDto?.meta.currency;
 
             const dividend = stocksDto?.events?.dividends?.[timestamp];
@@ -118,7 +121,7 @@ export class StockYahooService extends BaseAssetService {
         };
 
         const data = await HttpService.get<StocksYahooDto>(`${this.jsonUrl}/${ticker}`, { params }).then(r => r.data)
-            .catch(err => { throw new Error(`Yahoo Error: ${err?.response ?`${err?.response?.status} ${err?.response?.statusText}` : (err?.message ?? err?.toString())}`); });
+            .catch(err => { throw new Error(`Yahoo Error: ${ticker} - ${err?.response ?`${err?.response?.status} ${err?.response?.statusText}` : (err?.message ?? err?.toString())}`); });
 
         return data;
     }

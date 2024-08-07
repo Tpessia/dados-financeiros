@@ -3,7 +3,7 @@ import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
 import { DataGranularity } from '@/core/models/DataGranularity';
-import { generateFixedRate, initValue } from '@/core/services/AssetTransformers';
+import { generateFixedRate, initAssetValue } from '@/core/services/AssetTransformers';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { Injectable, Scope } from '@nestjs/common';
 
@@ -28,7 +28,7 @@ export class FixedRateService extends BaseAssetService {
             data: [],
         };
 
-        assetData.data = generateFixedRate(AssetType.FixedRate, params.minDate, params.maxDate, initValue, params.rate);
+        assetData.data = generateFixedRate(AssetType.FixedRate, params.minDate, params.maxDate, initAssetValue, params.rate);
 
         return assetData;
     }
