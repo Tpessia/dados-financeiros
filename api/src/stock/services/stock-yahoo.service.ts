@@ -1,4 +1,4 @@
-import { dateToUnix, isValidDate } from '@/@utils';
+import { dateToUnix, isValidDate, round } from '@/@utils';
 import { DataSource } from '@/core/enums/DataSource';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
@@ -70,18 +70,18 @@ export class StockYahooService extends BaseAssetService {
             const stockData: StockData = {
                 assetCode: params.assetCode,
                 date: date,
-                value: close,
+                value: round(close, 2),
                 currency: currency,
-                volume: volume,
-                open: open,
-                high: high,
-                low: low,
-                close: close,
-                adjRatio: adjRatio,
-                adjOpen: open * adjRatio,
-                adjHigh: high * adjRatio,
-                adjLow: low * adjRatio,
-                adjClose: adjClose,
+                volume: round(volume, 2),
+                open: round(open, 2),
+                high: round(high, 2),
+                low: round(low, 2),
+                close: round(close, 2),
+                adjRatio: round(adjRatio, 2),
+                adjOpen: round(open * adjRatio, 2),
+                adjHigh: round(high * adjRatio, 2),
+                adjLow: round(low * adjRatio, 2),
+                adjClose: round(adjClose, 2),
                 dividendAmount: dividendAmount,
                 splitCoefficient: splitCoefficient,
             };

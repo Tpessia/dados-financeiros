@@ -1,10 +1,9 @@
-import { addDate, businessDaysInYear } from '@/@utils';
+import { addDate, businessDaysInYear, round } from '@/@utils';
 import { AppModule } from '@/app.module';
 import { initAssetValue } from '@/core/services/AssetTransformers';
 import { SearchService } from '@/search/services/search.service';
 import { SelicDaySgsService } from '@/selic/services/selic-day-sgs.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { round } from 'lodash';
 
 describe('SearchService', () => {
   let service: SearchService;

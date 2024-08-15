@@ -132,7 +132,7 @@ export class SearchService {
                     }
                 }
 
-                data.data = cleanUpData(data.data);
+                data = cleanUpData(data);
                 data.key = asset.assetCode;
 
                 return data;

@@ -1,6 +1,6 @@
-import { businessDaysInYear, businessDaysRange, dateToIsoStr, datesRange, getFirstOfMonth, getLastOfMonth, isWeekend } from '@/@utils';
+import { businessDaysInYear, businessDaysRange, dateToIsoStr, datesRange, getFirstOfMonth, getLastOfMonth, isWeekend, round } from '@/@utils';
 import { AssetData } from '@/core/models/AssetData';
-import { round } from 'lodash';
+import { AssetHistData } from '@/core/models/AssetHistData';
 
 export const initAssetValue: number = 100;
 
@@ -129,9 +129,15 @@ export function applyLeverage(data: AssetData[], leverage: number): AssetData[] 
   return leveragedData;
 }
 
-export function cleanUpData(data: AssetData[]): AssetData[] {
-  for (let item of data) {
+export function cleanUpData(data: AssetHistData<AssetData>): AssetHistData<AssetData> {
+  data.metadata.assetCode = data.data?.[0]?.assetCode;
+  data.metadata.currency = data.data?.[0]?.currency;
+
+  for (let item of data.data) {
+    delete item.assetCode;
+    delete item.currency;
     if (item.value > 1) item.value = round(item.value, 2);
   }
+
   return data;
 }
