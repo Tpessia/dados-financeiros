@@ -130,14 +130,20 @@ export function applyLeverage(data: AssetData[], leverage: number): AssetData[] 
 }
 
 export function cleanUpData(data: AssetHistData<AssetData>): AssetHistData<AssetData> {
-  data.metadata.assetCode = data.data?.[0]?.assetCode;
-  data.metadata.currency = data.data?.[0]?.currency;
+  const newData: AssetData[] = [];
 
   for (let item of data.data) {
-    delete item.assetCode;
-    delete item.currency;
-    if (item.value > 1) item.value = round(item.value, 2);
+    if (!data.metadata.assetCode && item.assetCode) data.metadata.assetCode = item.assetCode;
+    if (!data.metadata.currency && item.currency) data.metadata.currency = item.currency;
+
+    const newItem: Omit<AssetData, 'assetCode'> = {
+      date: item.date,
+      value: item.value > 1 ? round(item.value, 2) : item.value,
+    };
+    newData.push(newItem as AssetData);
   }
+
+  data.data = newData;
 
   return data;
 }
