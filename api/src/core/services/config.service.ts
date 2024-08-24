@@ -1,30 +1,33 @@
 import { INestApplication, Logger, Type } from '@nestjs/common';
 import * as dotenv from 'dotenv';
-import { tmpdir } from 'os';
+import * as os from 'os';
 import * as path from 'path';
 const pkg = require(path.join(process.cwd(), 'package.json'));
 
 export type DynamicConfigs = Record<string, any>;
 
-export class AppService {
+export class ConfigService {
     static logger: Logger;
 
     private static app: INestApplication;
     static appId = pkg.name;
-    static appCacheDir = path.join(tmpdir(), `/${this.appId}`);
+    static appDataDir = path.join(process.cwd(), `/data`); // path.join(tmpdir(), `/${this.appId}`);
 
     private static envFile = path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`);
 
     private static info: string[] = [];
 
     static config = {
-        cacheTime: 15,
+        cacheTime: 7,
     };
 
     static async init() {
+        const osUser = os.userInfo();
+
         this.addInfo(`
             appId: ${this.appId}
-            appCacheDir: ${this.appCacheDir}
+            user: ${osUser.username}:${osUser.uid}:${osUser.gid}
+            appDataDir: ${this.appDataDir}
             cwd: ${process.cwd()}
             execPath: ${process.execPath}
             argv: ${process.argv.join()}
@@ -39,7 +42,7 @@ export class AppService {
 
     static async register(app: INestApplication) {
         this.app = app;
-        this.logger = new Logger(AppService.name);
+        this.logger = new Logger(ConfigService.name);
     }
 
     // Services

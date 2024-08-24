@@ -5,7 +5,7 @@ import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetSgsDto } from '@/core/models/AssetSgsDto';
 import { AssetType } from '@/core/models/AssetType';
 import { DataGranularity } from '@/core/models/DataGranularity';
-import { AppService } from '@/core/services/app.service';
+import { ConfigService } from '@/core/services/config.service';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { HttpService } from '@/core/services/http.service';
 import { sortBy } from 'lodash';
@@ -15,7 +15,7 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
     protected granularity: DataGranularity;
     protected jsonUrl: string;
 
-    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -AppService.config.cacheTime));
+    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -ConfigService.config.cacheTime));
 
     constructor(type: DataSource, assetType: AssetType, granularity: DataGranularity, code: string) {
         super(type);

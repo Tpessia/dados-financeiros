@@ -1,7 +1,7 @@
 import { globalMemoizeConfig } from '@/@utils';
 import ErrorFilter from '@/core/middlewares/ErrorFilter';
 import { FileLogger } from '@/core/middlewares/FileLogger';
-import { AppService } from '@/core/services/app.service';
+import { ConfigService } from '@/core/services/config.service';
 import { BadRequestException, LogLevel, VERSION_NEUTRAL, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerCustomOptions, SwaggerModule } from '@nestjs/swagger';
@@ -10,9 +10,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   // Bootstrap
 
-  AppService.init();
+  ConfigService.init();
 
-  globalMemoizeConfig.cacheConfig.cacheDir = AppService.appCacheDir;
+  globalMemoizeConfig.cacheConfig.cacheDir = ConfigService.appDataDir;
 
   const logLevels: LogLevel[] = process.env.NODE_ENV === 'prod'
     ? ['error', 'warn', 'log']
@@ -44,7 +44,7 @@ async function bootstrap() {
     }),
   );
 
-  await AppService.register(app);
+  await ConfigService.register(app);
 
   // Global Swagger
 
@@ -80,8 +80,8 @@ async function bootstrap() {
   await app.listen(process.env.PORT, '0.0.0.0', () => {
     const address = app.getHttpServer().address();
     const hostname = address.family === 'IPv6' ? `[${address.address}]` : address.address;
-    AppService.addInfo(`Listening on http://${hostname}:${address.port}/api/`);
-    AppService.logInfo();
+    ConfigService.addInfo(`Listening on http://${hostname}:${address.port}/api/`);
+    ConfigService.logInfo();
   });
 }
 

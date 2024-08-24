@@ -1,4 +1,4 @@
-import { AppService } from '@/core/services/app.service';
+import { ConfigService } from '@/core/services/config.service';
 import { ConsoleLogger, LogLevel } from '@nestjs/common';
 import { join as pathJoin } from 'path';
 import * as winston from 'winston';
@@ -6,12 +6,12 @@ import 'winston-daily-rotate-file';
 
 export class FileLogger extends ConsoleLogger {
     logger: winston.Logger;
-    logDir = AppService.appCacheDir;
+    logDir = ConfigService.appDataDir;
 
     constructor(logLevels: LogLevel[]) {
         super();
 
-        AppService.addInfo(`Logging to: ${this.logDir}`);
+        ConfigService.addInfo(`Logging to: ${this.logDir}`);
 
         this.setLogLevels(logLevels);
 

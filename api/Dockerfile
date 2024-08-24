@@ -39,9 +39,8 @@ RUN npm install --omit=dev
 COPY --from=build /app/dist /app/dist
 COPY .env.${ENV} .
 
+RUN mkdir /app/data
 RUN chown -R appuser:appuser /app
-
-RUN ls -la .
 
 USER appuser
 

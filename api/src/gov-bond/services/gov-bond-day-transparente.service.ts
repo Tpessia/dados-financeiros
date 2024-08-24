@@ -3,7 +3,7 @@ import { DataSource } from '@/core/enums/DataSource';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
 import { DataGranularity } from '@/core/models/DataGranularity';
-import { AppService } from '@/core/services/app.service';
+import { ConfigService } from '@/core/services/config.service';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { HttpService } from '@/core/services/http.service';
 import { GovBondDayTransparenteDto } from '@/gov-bond/dtos/GovBondDayTransparenteDto';
@@ -18,7 +18,7 @@ import * as xlsx from 'xlsx';
 export class GovBondDayTransparenteService extends BaseAssetService {
     private csvUrl = 'https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv';
 
-    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -AppService.config.cacheTime));
+    private static cacheKey = () => dateToIsoStr(addDate(normalizeTimezone(new Date()), 0, -ConfigService.config.cacheTime));
 
     constructor() {
         super(DataSource.GovBondDayTransparente);

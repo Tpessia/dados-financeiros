@@ -1,6 +1,6 @@
 import { dateTimeToIsoStr, promiseParallel } from '@/@utils';
 import { DataSource } from '@/core/enums/DataSource';
-import { AppService } from '@/core/services/app.service';
+import { ConfigService } from '@/core/services/config.service';
 import { BaseAssetService } from '@/core/services/BaseAssetService';
 import { GovBondDayTransparenteService } from '@/gov-bond/services/gov-bond-day-transparente.service';
 import { ImabDaySgsService } from '@/ipca/services/imab-day-sgs.service';
@@ -41,7 +41,7 @@ export class SchedulerService {
 
     async start() {
         // At noon (cacheKey reset)
-        const job1 = scheduleJob({ rule: `0 0 ${AppService.config.cacheTime} * * *`, tz: 'Etc/UTC' }, async () => {
+        const job1 = scheduleJob({ rule: `0 0 ${ConfigService.config.cacheTime} * * *`, tz: 'Etc/UTC' }, async () => {
             this.logger.log(`<JOB1> ${dateTimeToIsoStr(new Date())}`);
             await this.run();
             this.logger.log(`<\\JOB1> ${dateTimeToIsoStr(new Date())}`);
