@@ -11,7 +11,7 @@ export class ConfigService {
 
     private static app: INestApplication;
     static appId = pkg.name;
-    static appDataDir = path.join(process.cwd(), `/data`); // path.join(tmpdir(), `/${this.appId}`);
+    static appDataDir = path.join(os.tmpdir(), `/${this.appId}`);
 
     private static envFile = path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`);
 
@@ -19,6 +19,8 @@ export class ConfigService {
 
     static config = {
         cacheTime: 7,
+        currOp: ':',
+        rateOp: '*',
     };
 
     static async init() {

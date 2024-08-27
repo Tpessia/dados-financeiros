@@ -1,6 +1,5 @@
 import { ConfigService } from '@/core/services/config.service';
 import { ConsoleLogger, LogLevel } from '@nestjs/common';
-import { join as pathJoin } from 'path';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 
@@ -16,7 +15,8 @@ export class FileLogger extends ConsoleLogger {
         this.setLogLevels(logLevels);
 
         const transport = new winston.transports.DailyRotateFile({
-            filename: pathJoin(this.logDir, 'log-%DATE%.log'),
+            filename: 'log-%DATE%.log',
+            dirname: this.logDir,
             datePattern: 'YYYY-MM-DD',
             maxSize: '20m',
             maxFiles: '5d'

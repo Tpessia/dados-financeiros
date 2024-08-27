@@ -39,8 +39,11 @@ RUN npm install --omit=dev
 COPY --from=build /app/dist /app/dist
 COPY .env.${ENV} .
 
-RUN mkdir /app/data
+RUN mkdir -p /app
 RUN chown -R appuser:appuser /app
+
+RUN mkdir -p /tmp/dados-financeiros
+RUN chown -R appuser:appuser /tmp/dados-financeiros
 
 USER appuser
 

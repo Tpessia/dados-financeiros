@@ -1,4 +1,5 @@
 import { CoreModule } from '@/core/core.module';
+import { GoogleAnalyticsInterceptor } from '@/core/middlewares/GoogleAnalyticsInterceptor';
 import { ResponseInterceptor } from '@/core/middlewares/ResponseInterceptor';
 import { FixedRateModule } from '@/fixed-rate/fixed-rate.module';
 import { GovBondModule } from '@/gov-bond/gov-bond.module';
@@ -23,6 +24,10 @@ import { join } from 'path';
       provide: APP_INTERCEPTOR,
       useClass: ResponseInterceptor,
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: GoogleAnalyticsInterceptor,
+    },
   ],
   imports: [
     ServeStaticModule.forRoot({
@@ -40,7 +45,7 @@ import { join } from 'path';
   ],
 })
 export class AppModule {
-  private logger = new Logger('AppModule');
+  private logger = new Logger(AppModule.name);
 
   constructor(private schedulerService: SchedulerService) {}
 

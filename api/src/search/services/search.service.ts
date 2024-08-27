@@ -4,6 +4,7 @@ import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
 import { applyLeverage, assetfy, cleanUpData, convertCurrency, initAssetValue } from '@/core/services/AssetTransformers';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
+import { ConfigService } from '@/core/services/config.service';
 import { FixedRateService } from '@/fixed-rate/services/fixed-rate.service';
 import { GovBondType } from '@/gov-bond/models/GovBondData';
 import { GovBondDayTransparenteService } from '@/gov-bond/services/gov-bond-day-transparente.service';
@@ -99,8 +100,8 @@ export class SearchService {
             return assetsByType[rule.name].map((asset) => async () => {
                 const service: BaseAssetService = await this.moduleRef.resolve(rule.service, undefined, { strict: false });
 
-                const currOp = ':';
-                const rateOp = '*';
+                const currOp = ConfigService.config.currOp;
+                const rateOp = ConfigService.config.rateOp;
                 const regex = new RegExp(`^([^\\${currOp}\\${rateOp}]+)(?:\\${currOp}(\\w+))?(?:\\${rateOp}([\\w\\.]+))?`);
                 let [_, code, currency, rate] = asset.assetCode.match(regex); // TSLA:BRL*1.5, USDBRL=X
 

@@ -3,6 +3,10 @@ declare global {
     interface ProcessEnv {
       NODE_ENV: 'dev' | 'prod';
       PORT: string;
+      TZ: string;
+      GA_MEASUREMENT_ID: string;
+      GA_API_SECRET: string;
+      GA_CLIENT_ID: string;
     }
   }
 }
