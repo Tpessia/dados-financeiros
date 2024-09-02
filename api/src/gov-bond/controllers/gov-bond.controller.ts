@@ -18,15 +18,15 @@ export class GovBondController {
         private readonly govBondDayLastTdService: GovBondDayLastTdService,
     ) { }
 
-    @ApiQuery({ name: 'minDate', example: '2020-01-01' })
-    @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
-    @ApiOkResponse({ type: AssetHistData<GovBondData> })
-    @ApiDefaultResponse({ type: ErrorResponse })
-    @Get('day/sisweb')
-    async getDaySisweb(@Query('minDate', QueryRequiredPipe) minDate: string, @Query('maxDate', QueryRequiredPipe) maxDate: string): Promise<AssetHistData<GovBondData>> {
-        const data = await this.govBondDaySiswebService.getData({ minDate: parseDate(minDate), maxDate: parseDate(maxDate) });
-        return data;
-    }
+    // @ApiQuery({ name: 'minDate', example: '2020-01-01' })
+    // @ApiQuery({ name: 'maxDate', example: '2020-01-31' })
+    // @ApiOkResponse({ type: AssetHistData<GovBondData> })
+    // @ApiDefaultResponse({ type: ErrorResponse })
+    // @Get('day/sisweb')
+    // async getDaySisweb(@Query('minDate', QueryRequiredPipe) minDate: string, @Query('maxDate', QueryRequiredPipe) maxDate: string): Promise<AssetHistData<GovBondData>> {
+    //     const data = await this.govBondDaySiswebService.getData({ minDate: parseDate(minDate), maxDate: parseDate(maxDate) });
+    //     return data;
+    // }
 
     @ApiQuery({ name: 'minDate', example: '2020-01-01' })
     @ApiQuery({ name: 'maxDate', example: '2020-01-31' })

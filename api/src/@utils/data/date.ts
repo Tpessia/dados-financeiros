@@ -4,8 +4,8 @@ import * as moment from 'moment-timezone';
 export function extractIsoDateParts(date: Date): string[] {
     if (!date) return [];
 
-    const day = prependZeros(date.getDate());
-    const month = prependZeros((date.getMonth() + 1));
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String((date.getMonth() + 1)).padStart(2, '0');
     const year = date.getFullYear().toString();
 
     return [year, month, day];
@@ -17,13 +17,13 @@ export function extractIsoDateTimeParts(date: Date): string[] {
 
     const dateParts = extractIsoDateParts(date);
 
-    const hours = prependZeros(date.getHours());
-    const minutes = prependZeros(date.getMinutes());
-    const seconds = prependZeros(date.getSeconds());
-    const milliseconds = prependZeros(date.getMilliseconds(), 3);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
     const tzoAbs = Math.abs(date.getTimezoneOffset()),
         tzoDif = date.getTimezoneOffset() >= 0 ? '-' : '+',
-        tzo = `${tzoDif}${prependZeros(tzoAbs / 60)}:${prependZeros(tzoAbs % 60)}`;
+        tzo = `${tzoDif}${String(tzoAbs / 60).padStart(2, '0')}:${String(tzoAbs % 60).padStart(2, '0')}`;
 
     return dateParts.concat([hours, minutes, seconds, milliseconds, tzo]);
 }
@@ -45,7 +45,7 @@ export function dateToIsoStr(date: Date | null | undefined): string | null {
     return extractIsoDateParts(date).join('-');
 }
 
-// Date -> 2020-12-31 23:59:59.999-03:00
+// Date -> 2020-12-31T23:59:59.999-03:00
 export function dateTimeToIsoStr(date: Date): string;
 export function dateTimeToIsoStr(date: Date | null | undefined): string | null;
 export function dateTimeToIsoStr(date: Date | null | undefined): string | null {
@@ -203,32 +203,18 @@ export function getDuration(durationMilli: number, level: DurationLevel = Durati
       difference += `${days} `;
 
     if (hours != null)
-        difference += `${prependZeros(hours)}:`;
+        difference += `${String(hours).padStart(2, '0')}:`;
 
     if (minutes != null)
-        difference += `${prependZeros(minutes)}:`; 
+        difference += `${String(minutes).padStart(2, '0')}:`; 
 
     if (seconds != null)
-        difference += `${prependZeros(seconds)}.`; 
+        difference += `${String(seconds).padStart(2, '0')}.`; 
 
     if (milliseconds != null)
-        difference += `${appendZeros(prependZeros(milliseconds, 3), 3)}`; 
+        difference += `${String(milliseconds).padStart(3, '0').padEnd(3, '0')}`; 
 
     return difference;
-}
-
-export function prependZeros(number: string | number, size: number = 2) {
-    let str = number.toString();
-    if (str.length < size)
-        str = '0' + str;
-    return str;
-}
-
-export function appendZeros(number: string | number, size: number = 2) {
-    let str = number.toString();
-    if (str.length < size)
-        str = str + '0';
-    return str;
 }
 
 // 2021-09-30T21:00:00-03:00 -> 2021-10-01T00:00:00-03:00

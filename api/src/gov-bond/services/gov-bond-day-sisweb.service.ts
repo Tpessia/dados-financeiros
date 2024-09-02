@@ -1,4 +1,4 @@
-import { arrayDistinct, extractIsoDateParts, isValidDate, parseHeaderMatrix, parseMoment, prependZeros, promiseParallel, promiseRetry } from '@/@utils';
+import { arrayDistinct, extractIsoDateParts, isValidDate, parseHeaderMatrix, parseMoment, promiseParallel, promiseRetry } from '@/@utils';
 import { DataSource } from '@/core/enums/DataSource';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
@@ -102,7 +102,7 @@ export class GovBondDaySiswebService extends BaseAssetService {
                     data.date = date.toDate();
 
                     const matParts = maturity.match(/.{1,2}/g) as string[];
-                    data.maturityDate = new Date(`20${matParts[2]}-${prependZeros(matParts[1])}-${prependZeros(matParts[0])}T00:00:00-03:00`);
+                    data.maturityDate = new Date(`20${matParts[2]}-${String(matParts[1]).padStart(2, '0')}-${String(matParts[0]).padStart(2, '0')}T00:00:00-03:00`);
 
                     data.assetCode = `${assetType}:${extractIsoDateParts(data.maturityDate)[0]}`;
                     data.value = data.buyPu;

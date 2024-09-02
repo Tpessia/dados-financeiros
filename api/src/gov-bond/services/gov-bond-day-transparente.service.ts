@@ -68,6 +68,8 @@ export class GovBondDayTransparenteService extends BaseAssetService {
             err => this.logger.warn(`Retry Error: ${err}`)
         );
 
+        this.logger.log(`CSV Downloaded!`);
+
         const assetDto: GovBondDayTransparenteDto = {};
         // assetsDto.file = file;
         assetDto.workBook = xlsx.read(file, { type: 'buffer', raw: true }); // cellDates: false
