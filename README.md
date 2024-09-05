@@ -146,6 +146,12 @@ Debêntures (HTML) [ANBIMA Data]: https://data.anbima.com.br/debentures
 
 Dados de Fundos (HTML) [ANBIMA Data]: https://data.anbima.com.br/fundos
 
+
+### CRYPTO
+
+Yahoo Finance: https://query1.finance.yahoo.com/v8/finance/chart/BTC-USD?interval=1d&period1=1640995200&period2=1651363200&events=div,splits&includePrePost=true
+
+
 ### SERVIÇOS PROFISSIONAIS
 
 Comdinheiro: https://comdinheiro.com.br

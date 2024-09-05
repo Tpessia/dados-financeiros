@@ -22,7 +22,7 @@ export class StockYahooSearchService {
             score: e.score,
         })) ?? [];
 
-        return data.filter(e => ['EQUITY','INDEX','CURRENCY','ETF','MUTUALFUND'].includes(e.type));
+        return data.filter(e => ['EQUITY','INDEX','CURRENCY','ETF','MUTUALFUND','CRYPTOCURRENCY'].includes(e.type));
     }
 
     async getDto(ticker: string) {
