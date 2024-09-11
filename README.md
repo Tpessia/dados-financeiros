@@ -30,6 +30,12 @@ Fazenda SP API: https://webservices.fazenda.sp.gov.br/WSTransparencia/Transparen
 Portal do Investidor: https://www.investidor.gov.br/menu/Investidor_Estrangeiro/DadosEstatisticosEconomicosBrasil.html
 \
 Instituições Financeiras: https://www3.bcb.gov.br/ifdata/
+\
+Códigos ISIN: https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/consultas/mercado-a-vista/codigo-isin/pesquisa/
+\
+CVM - Informação Cadastral de Fundos de Investimento: https://dados.cvm.gov.br/dataset/fi-cad
+\
+CVM - Extrato de Fundos de Investimento: https://dados.cvm.gov.br/dataset/fi-doc-extrato
 
 
 ### ÍNDICES
@@ -100,6 +106,9 @@ TR Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados?
 \- Info: https://rapidapi.com/alphavantage/api/alpha-vantage
 \
 \- https://www.alphavantage.co/query?apikey={API_KEY}&function=TIME_SERIES_DAILY_ADJUSTED&symbol=BOVA11.SA&datatype=json&outputsize=full
+
+#### EODHD
+\- https://eodhd.com/financial-apis/api-for-historical-data-and-volumes
 
 #### brapi
 \- Info: https://brapi.ga/docs
