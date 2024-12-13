@@ -68,6 +68,8 @@ Calculadora do Cidadão (HTML) [Bacen]: curl -X POST -H "Content-Type: applicati
 \
 IPCA Mês (JSON) [Bacen]: http://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json
 \
+IPCA-15 Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.7478/dados?formato=json
+\
 IMAB Diário (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.12466/dados?formato=json
 \
 IMAB5 Diário (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.12467/dados?formato=json
