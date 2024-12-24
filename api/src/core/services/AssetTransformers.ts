@@ -1,6 +1,7 @@
 import { businessDaysInYear, businessDaysRange, dateToIsoStr, datesRange, getFirstOfMonth, getLastOfMonth, isWeekend, round } from '@/@utils';
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
+import { ConfigService } from '@/core/services/config.service';
 
 export const initAssetValue: number = 100;
 
@@ -147,3 +148,59 @@ export function cleanUpData(data: AssetHistData<AssetData>): AssetHistData<Asset
 
   return data;
 }
+
+export function sumAssets(key: string, ...data: AssetHistData<AssetData>[]): AssetHistData<AssetData> {
+  if (!data.length) throw new Error('Length 0 at sumAssets');
+
+  const assetKeys = key.split(ConfigService.config.sumRegex).filter(k => k !== '');
+  const operations = [...key.matchAll(ConfigService.config.sumRegexG)].map(m => m[0]);
+  const assets = assetKeys.map(k => data.find(d => d.key === k));
+
+  if (assets.some(a => !a)) throw new Error(`Missing assets for ${key}`);
+
+  const newData: AssetHistData<AssetData> = {
+    key,
+    granularity: data[0].granularity,
+    metadata: assets.flatMap(e => e!.metadata),
+    type: assets.map(e => e!.type).join('+') as any,
+    data: [],
+  };
+
+  const currencies = new Set(assets.map(e => e!.data[0].currency));
+  if (currencies.size !== 1) throw new Error('Currency missmatch at sumAssets');
+  const currency = currencies.values().next().value;
+
+  const dataMap = assets.map(e => new Map(e!.data.map(f => [dateToIsoStr(f.date), f.value])));
+  const dates = new Set(dataMap.flatMap(e => [...e.keys()]));
+  let prevValues: number[] = [];
+  let baseValues: number[] = [];
+
+  for (let date of dates) {
+    const values = dataMap.map((e, i) => {
+      const currentValue = e.get(date);
+      const prevValue = prevValues[i];
+      if (!currentValue) return 1;
+      if (!prevValue) {
+        baseValues[i] = currentValue;
+        return 1;
+      }
+      return currentValue / baseValues[i];
+    });
+
+    prevValues = dataMap.map((e, i) => e.get(date) ?? prevValues[i]);
+
+    const value = values.reduce((sum, val, i) => {
+      const op = i === 0 ? 1 : operations[i-1] === '+' ? 1 : -1;
+      return sum * Math.pow(val, op);
+    }, 1);
+
+    newData.data.push({
+      date: new Date(date),
+      assetCode: key,
+      value,
+      currency,
+    });
+  }
+
+  return newData;
+ }

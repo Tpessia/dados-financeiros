@@ -2,7 +2,7 @@ import { promiseParallel } from '@/@utils';
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
-import { applyLeverage, assetfy, cleanUpData, convertCurrency, initAssetValue } from '@/core/services/AssetTransformers';
+import { applyLeverage, assetfy, cleanUpData, convertCurrency, initAssetValue, sumAssets } from '@/core/services/AssetTransformers';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { ConfigService } from '@/core/services/config.service';
 import { FixedRateService } from '@/fixed-rate/services/fixed-rate.service';
@@ -71,6 +71,14 @@ export class SearchService {
             transformData: (data, rate) => applyLeverage(data, rate),
         },
         {
+            name: AssetType.IRX,
+            assetType: AssetType.IRX,
+            checkType: (assetCode) => assetCode.startsWith('IRX'),
+            service: StockYahooService,
+            transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: '^IRX', ...inputs }),
+            transformData: (data, rate) => applyLeverage(assetfy(data.map(e => ({ ...e, value: Math.pow(1 + e.value / 100, 1 / 252) - 1 })), initAssetValue), rate),
+        },
+        {
             name: AssetType.Stock,
             assetType: AssetType.Stock,
             checkType: (assetCode) => true,
@@ -88,8 +96,12 @@ export class SearchService {
         minDate.setHours(0, 0, 0, 0);
         maxDate.setHours(23, 59, 59, 999);
 
-        const assets = uniq(assetCodes.split(',')).map(a => ({ assetCode: a, rule: this.getAssetRule(a) }));
+        const cfg = ConfigService.config;
+
+        const assets = uniq(assetCodes.split(cfg.assetsRegex)).map(a => ({ assetCode: a, rule: this.getAssetRule(a) }));
         if (assets.length > 10) throw new Error('Too many assets (max = 10)');
+
+        const assetKeys = uniq(assetCodes.split(cfg.splitOp));
         const assetsByType = groupBy(assets, a => a.rule.name);
 
         const currencyRequests = new Map<string, Promise<AssetData[]>>();
@@ -100,10 +112,7 @@ export class SearchService {
             return assetsByType[rule.name].map((asset) => async () => {
                 const service: BaseAssetService = await this.moduleRef.resolve(rule.service, undefined, { strict: false });
 
-                const currOp = ConfigService.config.currOp;
-                const rateOp = ConfigService.config.rateOp;
-                const regex = new RegExp(`^([^\\${currOp}\\${rateOp}]+)(?:\\${currOp}(\\w+))?(?:\\${rateOp}([\\w\\.]+))?`);
-                let [_, code, currency, rate] = asset.assetCode.match(regex); // TSLA:BRL*1.5, USDBRL=X
+                let [_, code, currency, rate] = asset.assetCode.match(cfg.tickerRegex);
 
                 if (code == null || (rate != null && isNaN(+rate)))
                     throw new Error(`Invalid asset code: ${asset.assetCode}`);
@@ -141,8 +150,11 @@ export class SearchService {
         });
 
         const data = await promiseParallel(tasks, 5);
-        const sortedData = sortBy(data, e => assetCodes.indexOf(e.data[0]?.assetCode));
 
+        const assetSumKeys = assetKeys.filter(e => e.match(cfg.sumRegex));
+        assetSumKeys.forEach(key => data.push(sumAssets(key, ...data)));
+
+        const sortedData = sortBy(data.filter(e => assetKeys.includes(e.key)), e => assetCodes.indexOf(e.data[0]?.assetCode));
         return sortedData;
     }
 

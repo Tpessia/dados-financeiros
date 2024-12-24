@@ -19,8 +19,15 @@ export class ConfigService {
 
     static config = {
         cacheTime: 7,
+        splitOp: ',',
         currOp: ':',
         rateOp: '*',
+        sumOp: '+',
+        subOp: '~',
+        assetsRegex: new RegExp(`[,+~]`),
+        sumRegex: new RegExp(`[+~]`),
+        sumRegexG: new RegExp(`[+~]`, 'g'),
+        tickerRegex: new RegExp(`^([^\\:\\*]+)(?:\\:(\\w+))?(?:\\*([\\w\\.]+))?`), // TSLA:BRL*1.5, USDBRL=X
     };
 
     static async init() {
