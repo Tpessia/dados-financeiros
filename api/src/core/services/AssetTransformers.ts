@@ -2,6 +2,7 @@ import { businessDaysInYear, businessDaysRange, dateToIsoStr, datesRange, getFir
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { ConfigService } from '@/core/services/config.service';
+import { orderBy } from 'lodash';
 
 export const initAssetValue: number = 100;
 
@@ -152,55 +153,61 @@ export function cleanUpData(data: AssetHistData<AssetData>): AssetHistData<Asset
 export function sumAssets(key: string, ...data: AssetHistData<AssetData>[]): AssetHistData<AssetData> {
   if (!data.length) throw new Error('Length 0 at sumAssets');
 
+  // Parse assets and operations from key (e.g. "VTI+TSLA~BRL=X")
   const assetKeys = key.split(ConfigService.config.sumRegex).filter(k => k !== '');
   const operations = [...key.matchAll(ConfigService.config.sumRegexG)].map(m => m[0]);
   const assets = assetKeys.map(k => data.find(d => d.key === k));
-
   if (assets.some(a => !a)) throw new Error(`Missing assets for ${key}`);
 
-  const newData: AssetHistData<AssetData> = {
+  // Validate currencies
+  const currencies = new Set(assets.map(e => e.data[0].currency));
+  if (currencies.size !== 1) throw new Error('Currency missmatch at sumAssets');
+  const currency = currencies.values().next().value;
+
+  // Prepare data structure for calculations
+  const dataMap = assets.map(e => new Map(e.data.map(f => [dateToIsoStr(f.date), f.value])));
+  const dates = new Set(orderBy(dataMap.flatMap(e => [...e.keys()])));
+
+  let initValues: number[] = [];
+  let lastestValues: number[] = [];
+
+  // Calculate return variations for each date
+  const timeseriesData = [...dates].map(date => {
+    // Get variation for each asset relative to its initial value
+    const variations = dataMap.map((assetData, i) => {
+      const currentValue = assetData.get(date) ?? lastestValues[i];
+
+      // Handle first data point (return 1 = no variation)
+      if (!currentValue) return 1;
+      
+      // Set initial values for relative return calculation
+      if (!initValues[i]) initValues[i] = currentValue;
+
+      return currentValue / initValues[i];
+    });
+
+    // Update last known values for next iteration
+    lastestValues = dataMap.map((e, i) => e.get(date) ?? lastestValues[i]);
+
+    // Combine variations applying operations (+ or ~)
+    const combinedVariation = variations.reduce((total, variation, i) => {
+      const multiplier = i === 0 ? 1 : operations[i-1] === ConfigService.config.sumOp ? 1 : -1;
+      return total * Math.pow(variation, multiplier);
+    }, 1);
+
+    return {
+      date: new Date(date),
+      assetCode: key,
+      value: combinedVariation,
+      currency,
+    };
+  });
+
+  return {
     key,
     granularity: data[0].granularity,
     metadata: assets.flatMap(e => e!.metadata),
     type: assets.map(e => e!.type).join('+') as any,
-    data: [],
+    data: timeseriesData,
   };
-
-  const currencies = new Set(assets.map(e => e!.data[0].currency));
-  if (currencies.size !== 1) throw new Error('Currency missmatch at sumAssets');
-  const currency = currencies.values().next().value;
-
-  const dataMap = assets.map(e => new Map(e!.data.map(f => [dateToIsoStr(f.date), f.value])));
-  const dates = new Set(dataMap.flatMap(e => [...e.keys()]));
-  let prevValues: number[] = [];
-  let baseValues: number[] = [];
-
-  for (let date of dates) {
-    const values = dataMap.map((e, i) => {
-      const currentValue = e.get(date);
-      const prevValue = prevValues[i];
-      if (!currentValue) return 1;
-      if (!prevValue) {
-        baseValues[i] = currentValue;
-        return 1;
-      }
-      return currentValue / baseValues[i];
-    });
-
-    prevValues = dataMap.map((e, i) => e.get(date) ?? prevValues[i]);
-
-    const value = values.reduce((sum, val, i) => {
-      const op = i === 0 ? 1 : operations[i-1] === '+' ? 1 : -1;
-      return sum * Math.pow(val, op);
-    }, 1);
-
-    newData.data.push({
-      date: new Date(date),
-      assetCode: key,
-      value,
-      currency,
-    });
-  }
-
-  return newData;
- }
+}
