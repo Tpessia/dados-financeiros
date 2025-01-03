@@ -33,7 +33,7 @@ export function dailyfyPercents(monthlyData: AssetData[], maxDate?: Date): Asset
   return dailyData;
 }
 
-export function assetfy(data: AssetData[], initValue: number): AssetData[] {
+export function assetfy(data: AssetData[], initValue: number = initAssetValue): AssetData[] {
   const assetData: AssetData[] = [];
   let assetValue = initValue;
 
@@ -193,7 +193,7 @@ export function sumAssets(key: string, ...data: AssetHistData<AssetData>[]): Ass
     const combinedVariation = variations.reduce((total, variation, i) => {
       const multiplier = i === 0 ? 1 : operations[i-1] === ConfigService.config.sumOp ? 1 : -1;
       return total * Math.pow(variation, multiplier);
-    }, 1);
+    }, initAssetValue);
 
     return {
       date: new Date(date),

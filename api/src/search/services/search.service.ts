@@ -39,14 +39,14 @@ export class SearchService {
             assetType: AssetType.Selic,
             checkType: (assetCode) => assetCode.startsWith('SELIC.SA'),
             service: SelicDaySgsService,
-            transformData: (data, rate) => applyLeverage(assetfy(data, initAssetValue), rate),
+            transformData: (data, rate) => applyLeverage(assetfy(data), rate),
         },
         {
             name: AssetType.IPCA,
             assetType: AssetType.IPCA,
             checkType: (assetCode) => assetCode.startsWith('IPCA.SA'),
             service: IpcaDaySgsService,
-            transformData: (data, rate) => applyLeverage(assetfy(data, initAssetValue), rate),
+            transformData: (data, rate) => applyLeverage(assetfy(data), rate),
         },
         {
             name: AssetType.IMAB,
@@ -76,7 +76,7 @@ export class SearchService {
             checkType: (assetCode) => assetCode.startsWith('IRX'),
             service: StockYahooService,
             transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: '^IRX', ...inputs }),
-            transformData: (data, rate) => applyLeverage(assetfy(data.map(e => ({ ...e, value: Math.pow(1 + e.value / 100, 1 / 252) - 1 })), initAssetValue), rate),
+            transformData: (data, rate) => applyLeverage(assetfy(data.map(e => ({ ...e, value: Math.pow(1 + e.value / 100, 1 / 252) - 1 }))), rate),
         },
         {
             name: AssetType.Stock,
