@@ -6,5 +6,5 @@ export enum AssetType {
   GovBond = 'GovBond',
   Stock = 'Stock',
   Forex = 'Forex', // USDBRL=X
-  IRX = 'IRX', // US Fed Rate
+  TNX = 'TNX', // US Fed Rate
 }

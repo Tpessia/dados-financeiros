@@ -24,10 +24,10 @@ export class ConfigService {
         rateOp: '*',
         sumOp: '+',
         subOp: '~',
-        assetsRegex: new RegExp(`[,+~]`),
         sumRegex: new RegExp(`[+~]`),
         sumRegexG: new RegExp(`[+~]`, 'g'),
         tickerRegex: new RegExp(`^([^\\:\\*]+)(?:\\:(\\w+))?(?:\\*([\\w\\.]+))?`), // TSLA:BRL*1.5, USDBRL=X
+        trimmerRegex: new RegExp(`\\[(?:(\\d{4}-\\d{2}-\\d{2})?)\\|(?:(\\d{4}-\\d{2}-\\d{2})?)\\]`), // IMAB.SA[|2020-12-31]+B5P211.SA[2021-01-01|] / SELIC.SA[2010-01-01|2019-12-31]
     };
 
     static async init() {

@@ -138,6 +138,10 @@ export const dateToUnix = (date: Date) => date.getTime() / 1000;
 
 export const getDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
+export const getStartOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+export const getEndOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+
 export const getFirstOfYear = (date: Date) => new Date(date.getFullYear(), 0, 1);
 
 export const getLastOfYear = (date: Date) => new Date(date.getFullYear(), 11, 31);

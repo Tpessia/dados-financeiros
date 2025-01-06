@@ -1,4 +1,4 @@
-import { businessDaysInYear, businessDaysRange, dateToIsoStr, datesRange, getFirstOfMonth, getLastOfMonth, isWeekend, round } from '@/@utils';
+import { businessDaysInYear, businessDaysRange, dateToIsoStr, datesRange, getEndOfDay, getFirstOfMonth, getLastOfMonth, getStartOfDay, isWeekend, round } from '@/@utils';
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { ConfigService } from '@/core/services/config.service';
@@ -153,11 +153,13 @@ export function cleanUpData(data: AssetHistData<AssetData>): AssetHistData<Asset
 export function sumAssets(key: string, ...data: AssetHistData<AssetData>[]): AssetHistData<AssetData> {
   if (!data.length) throw new Error('Length 0 at sumAssets');
 
+  const cfg = ConfigService.config;
+
   // Parse assets and operations from key (e.g. "VTI+TSLA~BRL=X")
-  const assetKeys = key.split(ConfigService.config.sumRegex).filter(k => k !== '');
-  const operations = [...key.matchAll(ConfigService.config.sumRegexG)].map(m => m[0]);
+  const assetKeys = key.split(cfg.sumRegex).filter(k => k !== '');
+  const operations = [...key.matchAll(cfg.sumRegexG)].map(m => m[0]);
   const assets = assetKeys.map(k => data.find(d => d.key === k));
-  if (assets.some(a => !a)) throw new Error(`Missing assets for ${key}`);
+  if (assets.some(a => !a || !a.data.length)) throw new Error(`Missing assets for ${key}`);
 
   // Validate currencies
   const currencies = new Set(assets.map(e => e.data[0].currency));
@@ -191,7 +193,7 @@ export function sumAssets(key: string, ...data: AssetHistData<AssetData>[]): Ass
 
     // Combine variations applying operations (+ or ~)
     const combinedVariation = variations.reduce((total, variation, i) => {
-      const multiplier = i === 0 ? 1 : operations[i-1] === ConfigService.config.sumOp ? 1 : -1;
+      const multiplier = i === 0 ? 1 : operations[i-1] === cfg.sumOp ? 1 : -1;
       return total * Math.pow(variation, multiplier);
     }, initAssetValue);
 
@@ -206,8 +208,31 @@ export function sumAssets(key: string, ...data: AssetHistData<AssetData>[]): Ass
   return {
     key,
     granularity: data[0].granularity,
-    metadata: assets.flatMap(e => e!.metadata),
-    type: assets.map(e => e!.type).join('+') as any,
+    metadata: { ...assets[0].metadata, ...assets.flatMap(e => e.metadata) },
+    type: assets.map(e => e.type).join('+') as any,
     data: timeseriesData,
+  };
+}
+
+export function trimAssets(key: string, ...data: AssetHistData<AssetData>[]): AssetHistData<AssetData> {
+  if (!data.length) throw new Error('Length 0 at sumAssets');
+
+  const cfg = ConfigService.config;
+
+  // Parse asset from key (e.g. "SELIC.SA[2023-01-01|2024-01-01]")
+  const assetCode = key.replace(cfg.trimmerRegex, '');
+  const [_, start, end] = key.match(cfg.trimmerRegex) || [];
+  const asset = data.find(d => d.key === assetCode);
+  if (asset == null || !asset.data.length) throw new Error(`Missing asset for ${key}`);
+
+  // Filter the data
+  const startDate = start ? getStartOfDay(new Date(start)) : null;
+  const endDate = end ? getEndOfDay(new Date(end)) : null;
+  const trimmedData = asset.data.filter(e => (!startDate || e.date >= startDate) && (!endDate || e.date <= endDate));
+
+  return {
+    ...asset,
+    key,
+    data: trimmedData,
   };
 }

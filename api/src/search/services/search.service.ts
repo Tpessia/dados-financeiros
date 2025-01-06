@@ -2,7 +2,7 @@ import { promiseParallel } from '@/@utils';
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
-import { applyLeverage, assetfy, cleanUpData, convertCurrency, initAssetValue, sumAssets } from '@/core/services/AssetTransformers';
+import { applyLeverage, assetfy, cleanUpData, convertCurrency, sumAssets, trimAssets } from '@/core/services/AssetTransformers';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { ConfigService } from '@/core/services/config.service';
 import { FixedRateService } from '@/fixed-rate/services/fixed-rate.service';
@@ -71,11 +71,11 @@ export class SearchService {
             transformData: (data, rate) => applyLeverage(data, rate),
         },
         {
-            name: AssetType.IRX,
-            assetType: AssetType.IRX,
-            checkType: (assetCode) => assetCode.startsWith('IRX'),
+            name: AssetType.TNX,
+            assetType: AssetType.TNX,
+            checkType: (assetCode) => assetCode.startsWith('TNX'),
             service: StockYahooService,
-            transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: '^IRX', ...inputs }),
+            transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: '^TNX', ...inputs }),
             transformData: (data, rate) => applyLeverage(assetfy(data.map(e => ({ ...e, value: Math.pow(1 + e.value / 100, 1 / 252) - 1 }))), rate),
         },
         {
@@ -98,14 +98,17 @@ export class SearchService {
 
         const cfg = ConfigService.config;
 
-        const assets = uniq(assetCodes.split(cfg.assetsRegex)).map(a => ({ assetCode: a, rule: this.getAssetRule(a) }));
-        if (assets.length > 10) throw new Error('Too many assets (max = 10)');
+        const assetKeys = uniq(assetCodes.split(cfg.splitOp)); // SELIC.SA[|2024-01-01]+IMAB.SA, TSLA
+        const assetKeysTrim = uniq(assetKeys.flatMap(e => e.split(cfg.sumRegexG))); // SELIC.SA[|2024-01-01], IMAB.SA, TSLA
+        const assetCodesList = uniq(assetKeysTrim.map(e => e.replace(cfg.trimmerRegex, ''))); // SELIC.SA, IMAB.SA, TSLA
 
-        const assetKeys = uniq(assetCodes.split(cfg.splitOp));
+        const assets = assetCodesList.map(a => ({ assetCode: a, rule: this.getAssetRule(a) }));
+        if (assets.length > 10) throw new Error('Too many assets (max = 10)');
         const assetsByType = groupBy(assets, a => a.rule.name);
 
         const currencyRequests = new Map<string, Promise<AssetData[]>>();
 
+        // Fetch data
         const tasks: (() => Promise<AssetHistData<AssetData>>)[] = Object.values(assetsByType).flatMap((assetRule) => {
             const rule = assetRule[0].rule;
 
@@ -124,6 +127,7 @@ export class SearchService {
                 let data = await service.getData(inputs);
                 if (rule.transformData) data.data = rule.transformData(data.data, +rate);
 
+                // Convert currency
                 if (currency != null) {
                     const assetCurrency = data.data[0]?.currency;
                     if (assetCurrency != null && assetCurrency !== currency) {
@@ -151,10 +155,16 @@ export class SearchService {
 
         const data = await promiseParallel(tasks, 5);
 
-        const assetSumKeys = assetKeys.filter(e => e.match(cfg.sumRegex));
-        assetSumKeys.forEach(key => data.push(sumAssets(key, ...data)));
+        // Trim date range
+        const assetsTrim = assetKeysTrim.filter(e => e.match(cfg.trimmerRegex));
+        assetsTrim.forEach(key => data.push(trimAssets(key, ...data)));
 
-        const sortedData = sortBy(data.filter(e => assetKeys.includes(e.key)), e => assetCodes.indexOf(e.data[0]?.assetCode));
+        // Sum assets
+        const assetsSum = assetKeys.filter(e => e.match(cfg.sumRegex));
+        assetsSum.forEach(key => data.push(sumAssets(key, ...data)));
+
+        const filteredData = data.filter(e => assetKeys.includes(e.key));
+        const sortedData = sortBy(filteredData, e => assetCodes.indexOf(e.data[0]?.assetCode));
         return sortedData;
     }
 

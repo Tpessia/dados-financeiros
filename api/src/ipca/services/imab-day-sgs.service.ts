@@ -7,9 +7,13 @@ import { Injectable, Scope } from '@nestjs/common';
 
 // Daily data from 2004-04-30 to 2023-05-22
 
+// 12467 - IMAB 5 - below 5 years
+// 12468 - IMAB 5+ - above 5 years
+// 12466 - IMAB - all
+
 @Injectable({ scope: Scope.DEFAULT })
 export class ImabDaySgsService extends BaseAssetSgsService<IpcaData> {
     constructor() {
-        super(DataSource.ImabDaySgs, AssetType.IMAB, DataGranularity.Day, '12466');
+        super(DataSource.ImabDaySgs, AssetType.IMAB, DataGranularity.Day, '12467');
     }
 }
