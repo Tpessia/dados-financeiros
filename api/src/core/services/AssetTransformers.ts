@@ -138,7 +138,7 @@ export function cleanUpData(data: AssetHistData<AssetData>): AssetHistData<Asset
     if (!data.metadata.assetCode && item.assetCode) data.metadata.assetCode = item.assetCode;
     if (!data.metadata.currency && item.currency) data.metadata.currency = item.currency;
 
-    const newItem: Omit<AssetData, 'assetCode'> = {
+    const newItem: Partial<AssetData> = {
       date: item.date,
       value: item.value > 1 ? round(item.value, 2) : item.value,
     };

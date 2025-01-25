@@ -46,6 +46,8 @@ export class StockYahooService extends BaseAssetService {
             const timestamp = stocksDto?.timestamp?.[i];
             const date = new Date(timestamp * 1000);
 
+            const assetCode = stocksDto?.meta?.symbol;
+
             const quote = stocksDto?.indicators?.quote?.[0];
             const adj = stocksDto?.indicators?.adjclose?.[0];
 
@@ -68,7 +70,7 @@ export class StockYahooService extends BaseAssetService {
             // Map
 
             const stockData: StockData = {
-                assetCode: params.assetCode,
+                assetCode: assetCode,
                 date: date,
                 value: round(close, 2),
                 currency: currency,
@@ -120,13 +122,15 @@ export class StockYahooService extends BaseAssetService {
             includeAdjustedClose: true,
         };
 
-        const data = await HttpService.get<StocksYahooDto>(`${this.jsonUrl}/${ticker}`, { params }).then(r => r.data)
-            .catch(err => {
-                const errMsg = err?.message ?? err?.toString();
-                this.logger.error(`Yahoo Error Msg: ${errMsg}`);
-                throw new Error(`Yahoo Error: ${ticker} - ${err?.response ? `${err?.response?.status} ${err?.response?.statusText}` : errMsg}`);
-            });
-
-        return data;
+        try {
+            const data = await HttpService.get<StocksYahooDto>(`${this.jsonUrl}/${ticker}`, { params }).then(r => r.data);
+            const symbol = data.chart.result?.[0]?.meta?.symbol;
+            if (symbol !== ticker) throw new Error(`Ticker ${ticker} not found!${symbol ? ` Did you mean ${symbol}?` : ''}`);
+            return data;
+        } catch (err) {
+            const errMsg = err?.message ?? err?.toString();
+            this.logger.error(`Yahoo Error Msg: ${errMsg}`);
+            throw new Error(`Yahoo Error: ${ticker} - ${err?.response ? `${err?.response?.status} ${err?.response?.statusText}` : errMsg}`);
+        }
     }
 }
