@@ -64,7 +64,9 @@ async function bootstrap() {
   const swaggerExpressOpts: SwaggerCustomOptions = {
     customSiteTitle: 'Dados Financeiros',
     // customSwaggerUiPath: '/api/', // TODO: custom html
-    customCssUrl: '/api/SwaggerDark.css',
+    customCssUrl: '/api/assets/SwaggerDark.css',
+    customfavIcon: '/api/assets/favicon.ico',
+    customJsStr: `console.log(123)`,
     swaggerOptions: { // https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
       displayRequestDuration: true,
     },

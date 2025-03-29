@@ -26,8 +26,8 @@ import { join } from 'path';
   ],
   imports: [
     ServeStaticModule.forRoot({
-      serveRoot: '/api',
-      rootPath: join(__dirname, 'public'),
+      serveRoot: '/api/assets',
+      rootPath: join(__dirname, 'public/assets'),
     }),
     CoreModule,
     SearchModule,

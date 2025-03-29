@@ -259,3 +259,29 @@ export function businessDaysInYear(year: number) {
     const businessDays = businessDaysRange(startDate, endDate).length;
     return businessDays;
 }
+
+// Utility function to handle all date range splitting logic
+export function splitDateRanges(startDate: Date, endDate: Date, maxYears: number): [Date, Date][] {
+    const MAX_DATE_RANGE_MS = maxYears * 365 * 24 * 60 * 60 * 1000;
+    
+    // If the range is smaller than our max, return it as a single range
+    if (endDate.getTime() - startDate.getTime() <= MAX_DATE_RANGE_MS) {
+        return [[startDate, endDate]];
+    }
+    
+    // Otherwise, split into multiple ranges
+    const ranges: Array<[Date, Date]> = [];
+    let currentStart = new Date(startDate);
+    
+    while (currentStart < endDate) {
+        let currentEnd = new Date(currentStart.getTime() + MAX_DATE_RANGE_MS);
+        if (currentEnd > endDate) {
+            currentEnd = new Date(endDate);
+        }
+        
+        ranges.push([new Date(currentStart), new Date(currentEnd)]);
+        currentStart = new Date(currentEnd.getTime() + 1); // Add 1ms to avoid overlap
+    }
+    
+    return ranges;
+};

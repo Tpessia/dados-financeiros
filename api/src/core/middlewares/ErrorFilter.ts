@@ -13,7 +13,7 @@ export class ErrorResponse {
     error: string;
 
     @ApiProperty()
-    stack: string;
+    stack?: string;
 }
 
 @Catch()
@@ -35,10 +35,16 @@ export default class ErrorFilter implements ExceptionFilter<any> {
             ? tryStringifyCircularJson(err?.response?.data) || err.toString()
             : err.message;
 
+        const errorMsg: ErrorResponse = { statusCode: status, error: errMsg };
         const logError = `${errMsg}\n@ ${request.url}`;
-        this.logger.error(logError, err.stack);
 
-        const errorMsg: ErrorResponse = { statusCode: status, error: errMsg, stack: err.stack };
+        if (status === 500) {
+            errorMsg.stack = err.stack;
+            this.logger.error(logError, err.stack);
+        } else {
+            this.logger.error(logError);
+        }
+
         response.status(status).json(responseWrapper(errorMsg));
     }
 }
