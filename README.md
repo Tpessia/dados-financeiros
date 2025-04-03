@@ -113,9 +113,9 @@ TR Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados?
 \- https://eodhd.com/financial-apis/api-for-historical-data-and-volumes
 
 #### brapi
-\- Info: https://brapi.ga/docs
+\- Info: https://brapi.dev/docs
 \
-\- https://brapi.ga
+\- https://brapi.dev
 
 
 ### AÇÕES - FUNDAMENTALISTA
