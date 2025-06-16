@@ -6,13 +6,15 @@ ARG NODE_OPTIONS
 
 WORKDIR /app
 
+COPY dist* ./dist
 COPY package*.json .
-RUN npm install
+RUN if [ ! -d "./dist" ]; then npm install; fi
 
-COPY . .
+COPY *.* ./
+COPY src ./src
 RUN ls -la .
 
-RUN npm run build
+RUN if [ ! -d "./dist" ]; then npm run build; fi
 
 # Run
 
@@ -36,16 +38,16 @@ RUN useradd -r -g appuser -m -d /app -s /bin/bash --uid 2000 appuser
 COPY package*.json .
 RUN npm install --omit=dev
 
+USER appuser
+
 COPY --from=build /app/dist /app/dist
 COPY .env.${ENV} .
 
-RUN mkdir -p /app
-RUN chown -R appuser:appuser /app
+# RUN mkdir -p /app
+# RUN chown -R appuser:appuser /app
 
 RUN mkdir -p /tmp/dados-financeiros
 RUN chown -R appuser:appuser /tmp/dados-financeiros
-
-USER appuser
 
 EXPOSE 3000
 

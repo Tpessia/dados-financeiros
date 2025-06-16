@@ -50,7 +50,7 @@ async function bootstrap() {
   // Global Swagger
 
   const swaggerOpts = new DocumentBuilder()
-    .setTitle('Dados Financeiros')
+    .setTitle('Dados Financeiros API')
     .setDescription('GitHub: <a href="https://github.com/Tpessia/dados-financeiros" target="_blank">https://github.com/Tpessia/dados-financeiros</a>\n\nPlatform: <a href="https://InvestTester.com" target="_blank">https://InvestTester.com</a>')
     .setVersion('1.0')
     // .addServer('/')
@@ -62,18 +62,17 @@ async function bootstrap() {
     .build();
 
   const swaggerExpressOpts: SwaggerCustomOptions = {
-    customSiteTitle: 'Dados Financeiros',
+    customSiteTitle: 'Dados Financeiros API',
     // customSwaggerUiPath: '/api/', // TODO: custom html
     customCssUrl: '/api/assets/SwaggerDark.css',
     customfavIcon: '/api/assets/favicon.ico',
-    customJsStr: `console.log(123)`,
+    customJs: '/api/assets/swagger.js',
     swaggerOptions: { // https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
       displayRequestDuration: true,
+      persistAuthorization: true,
+      tryItOutEnabled: true,
     },
   };
-
-  if (process.env.NODE_ENV === 'prod')
-    swaggerExpressOpts.customfavIcon = '/assets/logo/logo.svg';
 
   const document = SwaggerModule.createDocument(app, swaggerOpts);
   SwaggerModule.setup('/api', app, document, swaggerExpressOpts);

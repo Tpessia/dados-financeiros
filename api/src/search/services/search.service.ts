@@ -71,11 +71,11 @@ export class SearchService {
             transformData: (data, rate) => applyLeverage(data, rate),
         },
         {
-            name: AssetType.TNX,
-            assetType: AssetType.TNX,
-            checkType: (assetCode) => assetCode.startsWith('TNX'),
+            name: AssetType.USFED,
+            assetType: AssetType.USFED,
+            checkType: (assetCode) => assetCode.startsWith('USFED'),
             service: StockYahooService,
-            transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: '^TNX', ...inputs }),
+            transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: '^IRX', ...inputs }),
             transformData: (data, rate) => applyLeverage(assetfy(data.map(e => ({ ...e, value: Math.pow(1 + e.value / 100, 1 / 252) - 1 }))), rate),
         },
         {

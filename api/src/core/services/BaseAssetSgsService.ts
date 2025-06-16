@@ -64,22 +64,22 @@ export abstract class BaseAssetSgsService<T extends AssetData> extends BaseAsset
     async getDto(minDate: Date, maxDate: Date): Promise<T[]> {
         this.logger.log(`--- Fetching data for ${BaseAssetSgsService.cacheKey()} ---`);
 
-        const func = async () => {
-            const fetch = async (minDate: Date, maxDate: Date) => {
-                const url = `${this.jsonUrl}&dataInicial=${dateToStr(minDate)}&dataFinal=${dateToStr(maxDate)}`;
-                console.log('url', url);
-                const dto: AssetSgsDto[] = await HttpService.get(url, { responseType: 'text' }).then(r => JSON.parse(r.data));
+        const fetchAll = async () => {
+            const fetchDate = async (startDate: Date, endDate: Date) => {
+                const url = `${this.jsonUrl}&dataInicial=${dateToStr(startDate)}&dataFinal=${dateToStr(endDate)}`;
+                const dto: AssetSgsDto[] = await promiseRetry(
+                    () => HttpService.get(url, { responseType: 'text' }).then(r => JSON.parse(r.data)),
+                    5, err => this.logger.warn(`Retry Error: ${err}`));
                 if (!dto || !dto.length) throw new Error(`[${this.assetType}] Invalid data from ${this.jsonUrl}: ${JSON.stringify(dto).slice(0, 100)}`);
                 return dto;
             };
 
             const dateRanges = splitDateRanges(minDate, maxDate, 9);
-            // TODO: improve not to lose all request if one fails
-            const results = await Promise.all(dateRanges.map(([start, end]) => fetch(start, end)));
+            const results = await Promise.all(dateRanges.map(([start, end]) => fetchDate(start, end)));
             return results.flat();
         };
 
-        let dto = await promiseRetry(func, 5, err => this.logger.warn(`Retry Error: ${err}`));
+        let dto = await fetchAll();
 
         // Map
 
