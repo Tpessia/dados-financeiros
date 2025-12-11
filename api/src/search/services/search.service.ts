@@ -2,7 +2,7 @@ import { promiseParallel } from '@/@utils';
 import { AssetData } from '@/core/models/AssetData';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
-import { applyLeverage, assetfy, cleanUpData, convertCurrency, sumAssets, trimAssets } from '@/core/services/AssetTransformers';
+import { applyFraction, applyLeverage, assetfy, cleanUpData, convertCurrency, sumAssets, trimAssets } from '@/core/services/AssetTransformers';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
 import { ConfigService } from '@/core/services/config.service';
 import { FixedRateService } from '@/fixed-rate/services/fixed-rate.service';
@@ -22,7 +22,7 @@ interface AssetRule {
     checkType: (assetCode: string) => boolean;
     service: Type;
     transformInputs?: (inputs: GetDataParams) => GetDataParams;
-    transformData?: (data: AssetData[], rate: number) => AssetData[];
+    transformData?: (data: AssetData[], rate: number, fraction: number) => AssetData[];
 };
 
 @Injectable({ scope: Scope.DEFAULT })
@@ -39,21 +39,21 @@ export class SearchService {
             assetType: AssetType.Selic,
             checkType: (assetCode) => assetCode.startsWith('SELIC.SA'),
             service: SelicDaySgsService,
-            transformData: (data, rate) => applyLeverage(assetfy(data), rate),
+            transformData: (data, rate, fraction) => applyFraction(applyLeverage(assetfy(data), rate), fraction),
         },
         {
             name: AssetType.IPCA,
             assetType: AssetType.IPCA,
             checkType: (assetCode) => assetCode.startsWith('IPCA.SA'),
             service: IpcaDaySgsService,
-            transformData: (data, rate) => applyLeverage(assetfy(data), rate),
+            transformData: (data, rate, fraction) => applyFraction(applyLeverage(assetfy(data), rate), fraction),
         },
         {
             name: AssetType.IMAB,
             assetType: AssetType.IMAB,
             checkType: (assetCode) => assetCode.startsWith('IMAB.SA'),
             service: ImabDaySgsService,
-            transformData: (data, rate) => applyLeverage(data, rate),
+            transformData: (data, rate, fraction) => applyFraction(applyLeverage(data, rate), fraction),
         },
         {
             name: AssetType.GovBond,
@@ -61,14 +61,14 @@ export class SearchService {
             checkType: (assetCode) => new RegExp(`^(${Object.values(GovBondType).join('|')})/\\d{4}\\.SA`).test(assetCode), // LTN/2021.SA
             service: GovBondDayTransparenteService,
             transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: assetCode.replace('.SA', ''), ...inputs }),
-            transformData: (data, rate) => applyLeverage(data, rate),
+            transformData: (data, rate, fraction) => applyFraction(applyLeverage(data, rate), fraction),
         },
         {
             name: AssetType.Forex,
             assetType: AssetType.Forex,
             checkType: (assetCode) => assetCode.endsWith('=X'), // USDBRL=X
             service: StockYahooService,
-            transformData: (data, rate) => applyLeverage(data, rate),
+            transformData: (data, rate, fraction) => applyFraction(applyLeverage(data, rate), fraction),
         },
         {
             name: AssetType.USFED,
@@ -76,14 +76,14 @@ export class SearchService {
             checkType: (assetCode) => assetCode.startsWith('USFED'),
             service: StockYahooService,
             transformInputs: ({ assetCode, ...inputs }) => ({ assetCode: '^IRX', ...inputs }),
-            transformData: (data, rate) => applyLeverage(assetfy(data.map(e => ({ ...e, value: Math.pow(1 + e.value / 100, 1 / 252) - 1 }))), rate),
+            transformData: (data, rate, fraction) => applyFraction(applyLeverage(assetfy(data.map(e => ({ ...e, value: Math.pow(1 + e.value / 100, 1 / 252) - 1 }))), rate), fraction),
         },
         {
             name: AssetType.Stock,
             assetType: AssetType.Stock,
             checkType: (assetCode) => true,
             service: StockYahooService,
-            transformData: (data, rate) => applyLeverage(data, rate),
+            transformData: (data, rate, fraction) => applyFraction(applyLeverage(data, rate), fraction),
         },
     ];
 
@@ -98,9 +98,9 @@ export class SearchService {
 
         const cfg = ConfigService.config;
 
-        const assetKeys = uniq(assetCodes.split(cfg.splitOp)); // SELIC.SA[|2024-01-01]+IMAB.SA, TSLA
-        const assetKeysTrim = uniq(assetKeys.flatMap(e => e.split(cfg.sumRegexG))); // SELIC.SA[|2024-01-01], IMAB.SA, TSLA
-        const assetCodesList = uniq(assetKeysTrim.map(e => e.replace(cfg.trimmerRegex, ''))); // SELIC.SA, IMAB.SA, TSLA
+        const assetKeys = uniq(assetCodes.split(cfg.splitOp)); // SELIC.SA[|2024-01-01]+IMAB.SA, TSLA:BRL*2/10
+        const assetKeysTrim = uniq(assetKeys.flatMap(e => e.split(cfg.sumRegexG))); // SELIC.SA[|2024-01-01], IMAB.SA, TSLA:BRL*2/10
+        const assetCodesList = uniq(assetKeysTrim.map(e => e.replace(cfg.trimmerRegex, ''))); // SELIC.SA, IMAB.SA, TSLA:BRL*2/10
 
         const assets = assetCodesList.map(a => ({ assetCode: a, rule: this.getAssetRule(a) }));
         if (assets.length > 10) throw new Error('Too many assets (max = 10)');
@@ -115,17 +115,18 @@ export class SearchService {
             return assetsByType[rule.name].map((asset) => async () => {
                 const service: BaseAssetService = await this.moduleRef.resolve(rule.service, undefined, { strict: false });
 
-                let [_, code, currency, rate] = asset.assetCode.match(cfg.tickerRegex);
+                let [_, code, currency, rate, fraction] = asset.assetCode.match(cfg.tickerRegex); // TSLA:BRL*2/10 -> [TSLA:BRL*2, TSLA, BRL, 2, 10]
 
                 if (code == null || (rate != null && isNaN(+rate)))
                     throw new Error(`Invalid asset code: ${asset.assetCode}`);
 
                 if (rate == null) rate = '1';
+                if (fraction == null) fraction = '1';
 
                 let inputs: GetDataParams = { assetCode: code, minDate, maxDate, rate: +rate };
                 if (rule.transformInputs) inputs = rule.transformInputs(inputs);
                 let data = await service.getData(inputs);
-                if (rule.transformData) data.data = rule.transformData(data.data, +rate);
+                if (rule.transformData) data.data = rule.transformData(data.data, +rate, +fraction);
 
                 // Convert currency
                 if (currency != null) {

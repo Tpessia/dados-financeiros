@@ -131,6 +131,17 @@ export function applyLeverage(data: AssetData[], leverage: number): AssetData[] 
   return leveragedData;
 }
 
+export function applyFraction(data: AssetData[], fraction: number): AssetData[] {
+  if (fraction == null || fraction === 1) return data;
+
+  const fractionedData: AssetData[] = data.map(({ value, ...rest }) => ({
+    ...rest,
+    value: value / fraction,
+  }));
+
+  return fractionedData;
+}
+
 export function cleanUpData(data: AssetHistData<AssetData>): AssetHistData<AssetData> {
   const newData: AssetData[] = [];
 
