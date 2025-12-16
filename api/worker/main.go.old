@@ -1,0 +1,276 @@
+// docker run -it --rm golang:1.25.5-alpine3.23
+
+package main
+
+import (
+	"encoding/csv"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+)
+
+type AssetPrice struct {
+	AssetCode    string
+	AssetType    string
+	MaturityDate string
+	BaseDate     string
+	BuyRate      float64
+	SellRate     float64
+	BuyPU        float64
+	SellPU       float64
+	BasePU       float64
+}
+
+type AssetError struct {
+	Data  string
+	Error error
+}
+
+func main() {
+	// Tipo Titulo;Data Vencimento;Data Base;Taxa Compra Manha;Taxa Venda Manha;PU Compra Manha;PU Venda Manha;PU Base Manha
+	// Tesouro IPCA+ com Juros Semestrais;15/05/2045;29/09/2010;5,95;6,05;1994,20;1966,65;1965,90
+
+	var data []AssetPrice
+	var errors []AssetError
+	count := 0
+
+	processCSV := func(row []string) error {
+		count++
+		if count == 1 {
+			// Skip header row
+			return nil
+		}
+
+		// Map asset type codes to full names
+		assetTypeMap := map[string]string{
+			"Tesouro Selic":                          "LFT",     // Selic
+			"Tesouro Prefixado":                      "LTN",     // Pre
+			"Tesouro Prefixado com Juros Semestrais": "NTN-F",   // Pre Juros
+			"Tesouro IPCA+":                          "NTN-B-P", // IPCA
+			"Tesouro IPCA+ com Juros Semestrais":     "NTN-B",   // IPCA Juros
+			"Tesouro IGPM+ com Juros Semestrais":     "NTN-C",   // IGP-M
+			"Tesouro Renda+ Aposentadoria Extra":     "NTN-R",   // Renda+
+			"Tesouro Educa+":                         "NTN-E",   // Educa+
+		}
+
+		// fmt.Println(row)
+
+		assetPrice := AssetPrice{}
+		assetErrors := []error{}
+
+		assetType, ok := assetTypeMap[row[0]]
+		if ok {
+			assetPrice.AssetType = assetType
+		} else {
+			assetErrors = append(assetErrors, fmt.Errorf("unknown asset type: %s", row[0]))
+		}
+
+		maturityDate, err := time.Parse("02/01/2006", row[1])
+		if err == nil {
+			assetPrice.MaturityDate = maturityDate.Format("2006-01-02")
+		} else {
+			assetErrors = append(assetErrors, fmt.Errorf("invalid dueDate format: %s", row[1]))
+		}
+
+		if assetType != "" && !maturityDate.IsZero() {
+			assetCode := fmt.Sprintf("%s/%s", assetType, maturityDate.Format("2006"))
+			assetPrice.AssetCode = assetCode
+		} else {
+			assetErrors = append(assetErrors, fmt.Errorf("cannot generate asset code: type=%s, dueDate=%s", row[0], row[1]))
+		}
+
+		baseDate, err := time.Parse("02/01/2006", row[2])
+		if err == nil {
+			assetPrice.BaseDate = baseDate.Format("2006-01-02")
+		} else {
+			assetErrors = append(assetErrors, fmt.Errorf("invalid baseDate format: %s", row[2]))
+		}
+
+		buyRate, err := strconv.ParseFloat(strings.ReplaceAll(row[3], ",", "."), 64)
+		if err == nil {
+			assetPrice.BuyRate = buyRate / 100
+		} else {
+			assetErrors = append(assetErrors, fmt.Errorf("invalid buyRate format: %s", row[3]))
+		}
+
+		sellRate, err := strconv.ParseFloat(strings.ReplaceAll(row[4], ",", "."), 64)
+		if err == nil {
+			assetPrice.SellRate = sellRate / 100
+		} else {
+			assetErrors = append(assetErrors, fmt.Errorf("invalid sellRate format: %s", row[4]))
+		}
+
+		buyPU, err := strconv.ParseFloat(strings.ReplaceAll(row[5], ",", "."), 64)
+		if err == nil {
+			assetPrice.BuyPU = buyPU
+		} else {
+			assetErrors = append(assetErrors, fmt.Errorf("invalid buyPU format: %s", row[5]))
+		}
+
+		sellPU, err := strconv.ParseFloat(strings.ReplaceAll(row[6], ",", "."), 64)
+		if err == nil {
+			assetPrice.SellPU = sellPU
+		} else {
+			assetErrors = append(assetErrors, fmt.Errorf("invalid sellPU format: %s", row[6]))
+		}
+
+		basePU, err := strconv.ParseFloat(strings.ReplaceAll(row[7], ",", "."), 64)
+		if err == nil {
+			assetPrice.BasePU = basePU
+		} else {
+			assetErrors = append(assetErrors, fmt.Errorf("invalid basePU format: %s", row[7]))
+		}
+
+		if len(assetErrors) > 0 {
+			errors = append(errors, AssetError{
+				Data:  strings.Join(row, ";"),
+				Error: fmt.Errorf("row %d errors: %v", count, assetErrors),
+			})
+			return nil
+		}
+
+		data = append(data, assetPrice)
+		return nil
+	}
+
+	err := streamCSV("https://www.tesourotransparente.gov.br/ckan/dataset/df56aa42-484a-4a59-8184-7676580c81e3/resource/796d2059-14e9-44e3-80c9-2d9e30b405c1/download/PrecoTaxaTesouroDireto.csv", processCSV)
+	if err != nil {
+		fmt.Println("Error streaming CSV:", err)
+		return
+	}
+
+	fmt.Println("Fetched data:", len(data), data[0:2])
+	fmt.Println("Errors:", len(errors), errors)
+
+	// jsonData, err := json.Marshal(data)
+	// if err != nil {
+	// 	fmt.Println("Error marshaling data to JSON:", err)
+	// 	return
+	// }
+
+	// fmt.Println("JSON Data:", string(jsonData))
+}
+
+func streamCSV(url string, handle func([]string) error) error {
+	fetcher := func() (io.ReadCloser, error) {
+		resp, err := http.Get(url)
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.StatusCode != 200 {
+			data, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			return nil, fmt.Errorf("http %d: %s", resp.StatusCode, strings.TrimSpace(string(data)))
+		}
+
+		return resp.Body, nil
+	}
+
+	reader, err := cacheOrFetch(fetcher, "/tmp/PrecoTaxaTesouroDireto.csv", 23*time.Hour)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	csvReader := csv.NewReader(reader)
+	csvReader.Comma = ';'
+	csvReader.FieldsPerRecord = -1 // allow variable number of fields
+
+	for {
+		// Read each record from csv
+		record, err := csvReader.Read()
+
+		// Break at end of file
+		if err == io.EOF {
+			break
+		}
+
+		// Handle other errors
+		if err != nil {
+			return err
+		}
+
+		// Process the record
+		err = handle(record)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func cacheOrFetch(fetch func() (io.ReadCloser, error), cachePath string, cacheExpiration time.Duration) (*teeReadCloser, error) {
+	cacheStat, _ := os.Stat(cachePath)
+	if cacheStat != nil && cacheStat.ModTime().Add(cacheExpiration).After(time.Now()) {
+		// return os.Open(cachePath)
+		file, err := os.Open(cachePath)
+		if err == nil {
+			return &teeReadCloser{
+				Reader: file,
+				Close:  file.Close,
+			}, err
+		}
+	}
+
+	reader, err := fetch()
+	if err != nil {
+		return nil, err
+	}
+
+	// return reader, nil
+
+	// no goroutine → requires TeeReader + close wrapper
+	// no goroutine + no wrapper → requires full buffering
+	// no buffering + no goroutine → impossible
+
+	// pr, pw := io.Pipe()
+
+	// go func() {
+	// 	defer pw.Close()
+	// 	defer reader.Close()
+
+	// 	file, err := os.Create(cachePath)
+	// 	if err != nil {
+	// 		pw.CloseWithError(err)
+	// 		return
+	// 	}
+	// 	defer file.Close()
+
+	// 	_, err = io.Copy(io.MultiWriter(file, pw), reader)
+	// 	if err != nil {
+	// 		pw.CloseWithError(err)
+	// 	}
+	// }()
+
+	// return pr, nil
+
+	file, err := os.Create(cachePath)
+	if err != nil {
+		fmt.Println("Error creating cache file:", err)
+	}
+
+	tee := io.TeeReader(reader, file)
+
+	return &teeReadCloser{
+		Reader: tee,
+		Close: func() error {
+			if file != nil {
+				file.Close()
+			}
+			return reader.Close()
+		},
+	}, nil
+}
+
+type teeReadCloser struct {
+	io.Reader
+	Close func() error
+}

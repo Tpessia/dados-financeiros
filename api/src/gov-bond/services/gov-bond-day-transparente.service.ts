@@ -1,10 +1,11 @@
-import { Memoize, MemoizeCacheType, addDate, arrayDistinct, castPercent, dateToIsoStr, extractIsoDateParts, isValidDate, normalizeTimezone, parseDate, parseHeaderMatrix, parseMoment, promiseRetry } from '@/@utils';
+import { addDate, arrayDistinct, castPercent, dateToIsoStr, extractIsoDateParts, isValidDate, jsonDateReviver, Memoize, MemoizeCacheType, normalizeTimezone, parseDate, parseHeaderMatrix, parseMoment, promiseRetry } from '@/@utils';
+import { spawnProcess } from '@/@utils/os/spawnProcess';
 import { DataSource } from '@/core/enums/DataSource';
 import { AssetHistData } from '@/core/models/AssetHistData';
 import { AssetType } from '@/core/models/AssetType';
 import { DataGranularity } from '@/core/models/DataGranularity';
-import { ConfigService } from '@/core/services/config.service';
 import { BaseAssetService, GetDataParams } from '@/core/services/BaseAssetService';
+import { ConfigService } from '@/core/services/config.service';
 import { HttpService } from '@/core/services/http.service';
 import { GovBondDayTransparenteDto } from '@/gov-bond/dtos/GovBondDayTransparenteDto';
 import { GovBondData, GovBondType } from '@/gov-bond/models/GovBondData';
@@ -61,6 +62,37 @@ export class GovBondDayTransparenteService extends BaseAssetService {
     })
     async getDto(): Promise<{ assetData: GovBondData[], metadata: any }> {
         this.logger.log(`--- Fetching data for ${GovBondDayTransparenteService.cacheKey()} ---`);
+
+        const workerResult = await spawnProcess('./worker/worker').catch(err => {
+            this.logger.error(`Error on worker process: ${err}`);
+            // throw err;
+            return undefined;
+        });
+
+        if (!workerResult) {
+            return this.getDtoOld();
+        }
+
+        this.logger.log('Worker process finished!');
+
+        const parse = (str: string) => JSON.parse(`[${str.split('\n').join(',').slice(0, -1)}]`, jsonDateReviver);
+
+        const assetData = parse(workerResult.stdout);
+
+        const metadata = { assetTypes: [], errors: [] };
+        metadata.assetTypes = arrayDistinct(assetData.map(e => e.assetType));
+        metadata.errors = parse(workerResult.stderr);
+
+        return { assetData, metadata };
+    }
+
+    @Memoize({
+        cacheType: MemoizeCacheType.Storage,
+        itemKey: (config, args, cache) => GovBondDayTransparenteService.cacheKey(),
+        onCall: (config, args, cache) => cache.invalidate(e => e !== GovBondDayTransparenteService.cacheKey())
+    })
+    async getDtoOld(): Promise<{ assetData: GovBondData[], metadata: any }> {
+        this.logger.log(`--- Fetching data for ${GovBondDayTransparenteService.cacheKey()} (OLD) ---`);
 
         const file = await promiseRetry(
             () => HttpService.get(this.csvUrl, { responseType: 'arraybuffer' }).then(r => Buffer.from(r.data, 'binary')),
@@ -174,3 +206,219 @@ export class GovBondDayTransparenteService extends BaseAssetService {
         return { assetData, metadata };
     }
 }
+
+// getDto stream
+
+// async getDto(): Promise<{ assetData: GovBondData[], metadata: any }> {
+//     this.logger.log(`--- Fetching data ---`);
+
+//     const res = await fetch(this.csvUrl);
+//     if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+
+//     const reader = res.body.getReader();
+//     const decoder = new TextDecoder("utf-8");
+
+//     const assetData: GovBondData[] = [];
+//     const errors: any[] = [];
+
+//     const assetTypeMap: Record<string, GovBondType> = {
+//         "Tesouro Selic": GovBondType.LFT,
+//         "Tesouro Prefixado": GovBondType.LTN,
+//         "Tesouro Prefixado com Juros Semestrais": GovBondType.NTN_F,
+//         "Tesouro IPCA+": GovBondType.NTN_B_P,
+//         "Tesouro IPCA+ com Juros Semestrais": GovBondType.NTN_B,
+//         "Tesouro IGPM+ com Juros Semestrais": GovBondType.NTN_C,
+//         "Tesouro Renda+ Aposentadoria Extra": GovBondType.NTN_R,
+//         "Tesouro Educa+": GovBondType.NTN_E,
+//     };
+
+//     let buffer = "";
+//     let row = 0;
+
+//     while (true) {
+//         const { value, done } = await reader.read();
+//         if (done) break;
+
+//         buffer += decoder.decode(value, { stream: true });
+
+//         let idx;
+//         while ((idx = buffer.indexOf("\n")) >= 0) {
+//             const line = buffer.slice(0, idx).trim();
+//             buffer = buffer.slice(idx + 1);
+
+//             row++;
+//             if (row === 1 || !line) continue; // header or empty
+
+//             try {
+//                 const cols = line.split(";");
+//                 if (cols.length < 8) throw new Error("Invalid column count");
+
+//                 const [
+//                     rawType,
+//                     maturityRaw,
+//                     dateRaw,
+//                     buyRateRaw,
+//                     sellRateRaw,
+//                     buyPuRaw,
+//                     sellPuRaw,
+//                     basePuRaw,
+//                 ] = cols;
+
+//                 const mappedType = assetTypeMap[rawType];
+//                 if (!mappedType) throw new Error("Unknown asset type");
+
+//                 const maturityDate = parseDate(maturityRaw, "DD/MM/YYYY");
+//                 const date = parseDate(dateRaw, "DD/MM/YYYY");
+
+//                 const buyRate = Number(buyRateRaw.replace(",", ".")) / 100;
+//                 const sellRate = Number(sellRateRaw.replace(",", ".")) / 100;
+
+//                 const buyPu = Number(buyPuRaw.replace(",", "."));
+//                 const sellPu = Number(sellPuRaw.replace(",", "."));
+//                 const basePu = Number(basePuRaw.replace(",", "."));
+
+//                 if (
+//                     !isValidDate(date) ||
+//                     !isValidDate(maturityDate) ||
+//                     [buyRate, sellRate, buyPu, sellPu, basePu].some(Number.isNaN)
+//                 ) {
+//                     throw new Error("Invalid numeric/date field");
+//                 }
+
+//                 const year = maturityDate.getFullYear();
+//                 const assetCode = `${mappedType}/${year}`;
+
+//                 assetData.push({
+//                     assetType: mappedType,
+//                     assetCode,
+//                     maturityDate,
+//                     date,
+//                     buyRate,
+//                     sellRate,
+//                     buyPu,
+//                     sellPu,
+//                     basePu,
+//                     value: buyPu,
+//                     currency: "BRL",
+//                 });
+
+//             } catch (err) {
+//                 errors.push({
+//                     row,
+//                     message: err.message,
+//                     data: line,
+//                 });
+//             }
+//         }
+//     }
+
+//     return {
+//         assetData,
+//         metadata: {
+//             assetTypes: [...new Set(assetData.map(a => a.assetType))],
+//             errors,
+//         },
+//     };
+// }
+
+
+
+// getDto performant non-stream
+
+// async getDto(): Promise<{ assetData: GovBondData[], metadata: any }> {
+//     this.logger.log(`--- Fetching data ---`);
+
+//     const res = await fetch(this.csvUrl);
+//     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+//     const text = await res.text();
+
+//     const lines = text.split("\n").filter(Boolean);
+
+//     const assetData: GovBondData[] = [];
+//     const errors: any[] = [];
+
+//     const assetTypeMap: Record<string, GovBondType> = {
+//         "Tesouro Selic": GovBondType.LFT,
+//         "Tesouro Prefixado": GovBondType.LTN,
+//         "Tesouro Prefixado com Juros Semestrais": GovBondType.NTN_F,
+//         "Tesouro IPCA+": GovBondType.NTN_B_P,
+//         "Tesouro IPCA+ com Juros Semestrais": GovBondType.NTN_B,
+//         "Tesouro IGPM+ com Juros Semestrais": GovBondType.NTN_C,
+//         "Tesouro Renda+ Aposentadoria Extra": GovBondType.NTN_R,
+//         "Tesouro Educa+": GovBondType.NTN_E,
+//     };
+
+//     for (let i = 1; i < lines.length; i++) { // skip header
+//         const row = lines[i].trim();
+//         if (!row) continue;
+
+//         const cols = row.split(";");
+
+//         try {
+//             const [
+//                 rawType,
+//                 maturityRaw,
+//                 dateRaw,
+//                 buyRateRaw,
+//                 sellRateRaw,
+//                 buyPuRaw,
+//                 sellPuRaw,
+//                 basePuRaw,
+//             ] = cols;
+
+//             const mappedType = assetTypeMap[rawType];
+//             if (!mappedType) throw new Error("Unknown asset type");
+
+//             const maturityDate = parseDate(maturityRaw, "DD/MM/YYYY");
+//             const date = parseDate(dateRaw, "DD/MM/YYYY");
+
+//             const buyRate = Number(buyRateRaw.replace(",", ".")) / 100;
+//             const sellRate = Number(sellRateRaw.replace(",", ".")) / 100;
+
+//             const buyPu = Number(buyPuRaw.replace(",", "."));
+//             const sellPu = Number(sellPuRaw.replace(",", "."));
+//             const basePu = Number(basePuRaw.replace(",", "."));
+
+//             if (
+//                 !isValidDate(date) ||
+//                 !isValidDate(maturityDate) ||
+//                 [buyRate, sellRate, buyPu, sellPu, basePu].some(Number.isNaN)
+//             ) {
+//                 throw new Error("Invalid numeric/date field");
+//             }
+
+//             const year = maturityDate.getFullYear();
+//             const assetCode = `${mappedType}/${year}`;
+
+//             assetData.push({
+//                 assetType: mappedType,
+//                 assetCode,
+//                 maturityDate,
+//                 date,
+//                 buyRate,
+//                 sellRate,
+//                 buyPu,
+//                 sellPu,
+//                 basePu,
+//                 value: buyPu,
+//                 currency: "BRL",
+//             });
+
+//         } catch (err) {
+//             errors.push({
+//                 row: i + 1,
+//                 message: err.message,
+//                 data: row,
+//             });
+//         }
+//     }
+
+//     return {
+//         assetData,
+//         metadata: {
+//             assetTypes: [...new Set(assetData.map(a => a.assetType))],
+//             errors,
+//         },
+//     };
+// }

@@ -16,6 +16,19 @@ RUN ls -la .
 
 RUN if [ ! -d "./dist" ]; then npm run build; fi
 
+# Build Go binary
+
+FROM golang:1.25.5-alpine3.23 AS build-go
+
+# Set necessary Go build environment variables
+# ENV CGO_ENABLED=0 GOOS=linux
+
+WORKDIR /app
+
+COPY worker .
+
+RUN go build -o worker .
+
 # Run
 
 FROM node:20.12.2-bullseye AS run
@@ -42,6 +55,8 @@ USER appuser
 
 COPY --from=build /app/dist /app/dist
 COPY .env.${ENV} .
+
+COPY --from=build-go /app/worker /app/worker/worker
 
 # RUN mkdir -p /app
 # RUN chown -R appuser:appuser /app
