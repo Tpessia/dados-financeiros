@@ -19,6 +19,8 @@ Bacen SGS: https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?met
 \
 Bacen SGS Tutorial: https://dadosabertos.bcb.gov.br/dataset/25436-taxa-media-mensal-de-juros-das-operacoes-de-credito-com-recursos-livres---total/resource/da27b06a-201d-433b-8351-d9987e3d6487
 \
+Dólar Americano (USD) Todos os Boletins [Bacen]: https://dadosabertos.bcb.gov.br/dataset/dolar-americano-usd-todos-os-boletins-diarios
+\
 Developers B3: https://developers.b3.com.br/
 \
 ANBIMA Data: https://data.anbima.com.br/
@@ -36,6 +38,14 @@ Códigos ISIN: https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dad
 CVM - Informação Cadastral de Fundos de Investimento: https://dados.cvm.gov.br/dataset/fi-cad
 \
 CVM - Extrato de Fundos de Investimento: https://dados.cvm.gov.br/dataset/fi-doc-extrato
+\
+Agregados IBGE (Lista de Tabelas do SIDRA) [JSON]: https://servicodados.ibge.gov.br/api/v3/agregados
+\
+Pesquisas IBGE (Lista de Pesquisas Gerais) [JSON]: https://servicodados.ibge.gov.br/api/v3/pesquisas
+\
+Metadados de uma Tabela IBGE (Ex: 7060) [JSON]: https://servicodados.ibge.gov.br/api/v3/agregados/7060/metadados
+\
+Metadados Estatísticos do IBGE (Catálogo Conecta): https://apimetadados.ibge.gov.br/
 
 
 ### ÍNDICES
@@ -91,6 +101,20 @@ TR Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados?
 Índices Amplos (HTML) [B3]: https://www.b3.com.br/pt_br/market-data-e-indices/indices/
 \
 Índices de Segmentos e Setoriais (HTML) [B3]: https://www.b3.com.br/pt_br/market-data-e-indices/indices/indices-de-segmentos-e-setoriais/
+\
+Valores de Séries Históricas (IPCA/INPC/IPCA-15 por Grupo de Produtos via SIDRA API) [JSON]: https://apisidra.ibge.gov.br/values/t/{ID_TABELA}/v/63/p/all/c315/{ID_GRUPO}/{CODIGO_TERRITORIO}
+\
+Exemplo (São Paulo): https://apisidra.ibge.gov.br/values/t/7060/v/63/p/all/c315/7169,7170,7445,7486,7558,7625,7660,7712,7766,7786/n7/3501
+\
+Exemplo (Achar código RM do Estado): https://apisidra.ibge.gov.br/values/t/7060/v/63/p/last%201/n7/all
+\
+Visualização Web - Tabela 7060 (IPCA - Jan/2020 ao presente) [IBGE]: https://sidra.ibge.gov.br/tabela/7060
+\
+Visualização Web - Tabela 1419 (IPCA - Jan/2012 a Dez/2019) [IBGE]: https://sidra.ibge.gov.br/tabela/1419
+\
+Visualização Web - Tabela 2938 (IPCA - Jul/2006 a Dez/2011) [IBGE]: https://sidra.ibge.gov.br/tabela/2938
+\
+Visualização Web - Tabela 655 (IPCA - Ago/1999 a Jun/2006) [IBGE]: https://sidra.ibge.gov.br/tabela/655
 
 
 ### AÇÕES/FIIs
@@ -116,6 +140,9 @@ TR Mês (JSON) [Bacen]: https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados?
 \- Info: https://brapi.ga/docs
 \
 \- https://brapi.ga
+
+#### IEX Trading
+\- https://iextrading.com/
 
 
 ### AÇÕES - FUNDAMENTALISTA
@@ -170,6 +197,8 @@ Comdinheiro: https://comdinheiro.com.br
 APIs Fintz: https://fintz.com.br
 \
 Algoseek: https://www.algoseek.com
+\
+Dados de Mercado API: https://www.dadosdemercado.com.br/api/docs
 
 
 ### PACOTES
@@ -200,30 +229,20 @@ CEI Crawler: https://github.com/Menighin/cei-crawler
 [GetBCBData](https://github.com/msperlin/GetBCBData): Import data from the SGS system of Brazilian Central Bank
 \
 [rbcb](https://github.com/wilsonfreitas/rbcb): R interface to Brazilian Central Bank web services (same data source as GetBCBData).
+\
+[Tutorial RPubs (Séries Temporais/Finanças)](https://rpubs.com/frank-pinho/517779): Exemplo prático de extração de dados no R
 
 
 ### Sites
 
 Considere a Inflação: https://www.considereainflacao.com.br/ (https://github.com/danielbm/considere)
 \
-Dados Abertos Brasil: https://www.gustavofurtado.com/dab.html (https://github.com/GusFurtado/DadosAbertosBrasil)
+Dados Abertos Brasil: https://www.gustavofurtado.com.br/dab.html (https://github.com/GusFurtado/DadosAbertosBrasil)
 \
 DrCalc.net: http://drcalc.net/
-
-
-### TODO
-https://escoladofinanceiro.com/investimentos-no-brasil/
 \
-https://iextrading.com/
+Escola do Financeiro: https://escoladofinanceiro.com/investimentos-no-brasil/
 \
-https://www.fea.usp.br/biblioteca/fontes-de-informacao/base-de-dados
+FEA USP - Fontes de Informação e Bases de Dados: https://www.fea.usp.br/biblioteca/fontes-de-informacao/base-de-dados
 \
-https://rpubs.com/frank-pinho/517779
-\
-https://fxgears.com/index.php?threads/how-to-acquire-free-historical-tick-and-bar-data-for-algo-trading-and-backtesting-in-2020-stocks-forex-and-crypto-currency.1229/#post-19305
-\
-https://dadosabertos.bcb.gov.br/dataset/dolar-americano-usd-todos-os-boletins-diarios
-\
-https://www.dadosdemercado.com.br/api/docs
-\
-https://nefin.com.br/
+FXGears (Historical Data for Algo Trading): https://fxgears.com/index.php?threads/how-to-acquire-free-historical-tick-and-bar-data-for-algo-trading-and-backtesting-in-2020-stocks-forex-and-crypto-currency.1229/#post-19305
